@@ -195,6 +195,7 @@ add_action( 'admin_notices', function() {
 			wp_enqueue_script('bluefin-plugin-admin', plugins_url( 'assets/plugin_admin.js', WC_BLUEFIN_MAIN_FILE ), ['wp-element'], null, true);
 			
 			wp_localize_script('bluefin-plugin-admin', 'bluefinPlugin', [
+				'capture_url' => esc_url_raw(rest_url('wc_bluefin/v1/capture_transaction')),
 				'nonce'    => wp_create_nonce('wp_rest'),
 			]);
 	}

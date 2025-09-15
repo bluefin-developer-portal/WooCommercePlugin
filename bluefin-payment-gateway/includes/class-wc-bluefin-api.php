@@ -157,6 +157,19 @@ class WC_Bluefin_API {
 		return $res;
 	}
 
+	public static function v4_capture($transaction) {
+		$url = self::$endpoint . self::api_postfix . self::$account_id . 
+				"/payments/" . $transaction['transactionId'] . "/capture";
+
+		$capture_req = [
+			"posProfile" => "ECOMMERCE",
+		];
+
+		$res = self::POST_request($url, $capture_req, self::generate_headers());
+
+		return $res;
+	}
+
 	public static function v4_auth($transaction) {
 		$url = self::$endpoint . self::api_postfix . self::$account_id . 
 				"/payments/auth";
