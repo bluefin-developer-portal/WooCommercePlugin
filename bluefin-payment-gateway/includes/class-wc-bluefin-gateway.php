@@ -252,8 +252,15 @@ add_action( 'admin_notices', function() {
 				]
 			]);
 
-			$order->update_status( OrderStatus::REFUNDED, sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
-
+			// TODO: $order->get_total isn't always the same after the first refund.
+			if($order->get_total() != $amount) {
+				// Partially Refunded
+				// TODO: add $order->add_order_note("AUTHORIZED"); since the order status is the same in this case
+				$order->update_status( OrderStatus::COMPLETED, sprintf( __( 'Transaction Partially Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
+			} else {
+				// Full Refund
+				$order->update_status( OrderStatus::REFUNDED, sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
+			}
 			$order->save();
 
 			// Indicating success
