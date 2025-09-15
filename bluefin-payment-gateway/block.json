@@ -1,0 +1,12 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "woocommerce/bluefin-payment-gateway",
+	"version": "0.1.0",
+	"title": "Bluefin Payment Gateway",
+	"category": "widgets",
+	"textdomain": "bluefin-payment-gateway",
+	"editorScript": "file:./build/index.js",
+	"editorStyle": "file:./build/index.css",
+	"style": "file:./build/style-index.css"
+}
