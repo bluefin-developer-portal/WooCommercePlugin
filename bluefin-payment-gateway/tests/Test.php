@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class Test extends TestCase {
 
-	
+
 	public function testEquality(): void {
 		$this->assertEquals( 1, 1 );
 	}

@@ -12,17 +12,17 @@ class WC_Bluefin_Logger {
 	const WC_LOG_FILENAME = 'woocommerce-gateway-bluefin';
 
 	const LOG_CONTEXT = [
-		'source'             => self::WC_LOG_FILENAME,
+		'source' => self::WC_LOG_FILENAME,
 		// 'bluefin_version'     => WC_BLUEFIN_VERSION,
 		// 'bluefin_api_version' => WC_Bluefin_API::BLUEFIN_API_VERSION,
 	];
 
 
 	public static $logger;
-	
+
 	public static $logger_enabled;
-	
-	public static function set_logger_enabled(bool $enabled) {
+
+	public static function set_logger_enabled( bool $enabled ) {
 		self::$logger_enabled = $enabled;
 	}
 
@@ -41,7 +41,7 @@ class WC_Bluefin_Logger {
 		if ( empty( self::$logger ) ) {
 			self::$logger = wc_get_logger();
 		}
-		
+
 		$log_entry = "\n";
 
 		// $log_entry  = "\n" . '====Bluefin Version: ' . WC_BLUEFIN_VERSION . '====' . "\n";

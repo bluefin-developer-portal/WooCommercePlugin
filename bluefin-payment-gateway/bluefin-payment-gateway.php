@@ -11,7 +11,7 @@
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
- 
+
 // TODO: Plugin URI: https://wordpress.org/plugins/bluefin-payment-gateway
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -108,8 +108,8 @@ function create_token_table() {
 	    token varchar(64) NOT NULL
 	) $charset_collate;";
 
-	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
 	dbDelta( $sql );
 }
 
@@ -118,89 +118,103 @@ function create_token_table() {
  *
  * @since 0.1.0
  */
- 
+
 function bluefin_payment_gateway_init() {
 	load_plugin_textdomain( 'bluefin-payment-gateway', false, plugin_basename( dirname( WC_BLUEFIN_MAIN_FILE ) ) . '/languages' );
-	
+
 	// add_action( 'admin_notices', 'bluefin_payment_gateway_missing_wc_notice' );
 	// wp_admin_notice( 'There was an error!', [ 'type' => 'error' ] );
-	
+
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		add_action( 'admin_notices', 'bluefin_payment_gateway_missing_wc_notice' );
 		return;
 	}
-	
+
 	if ( version_compare( WC_VERSION, WC_BLUEFIN_MIN_WC_VER, '<' ) ) {
 		add_action( 'admin_notices', 'woocommerce_bluefin_wc_not_supported' );
 		return;
 	}
-	
+
 	create_token_table();
-	
 
 	woocommerce_bluefin_gateway();
-
 }
 
-add_action( 'woocommerce_blocks_loaded', function() {
-	add_action( 'woocommerce_blocks_payment_method_type_registration', function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
-		$payment_method_registry->register( new class extends AbstractPaymentMethodType {
+add_action(
+	'woocommerce_blocks_loaded',
+	function () {
+		add_action(
+			'woocommerce_blocks_payment_method_type_registration',
+			function ( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+				$payment_method_registry->register(
+					new class() extends AbstractPaymentMethodType {
 
-			public function get_name() {
-				return 'bluefin_gateway'; // Must match your $this->id
-			}
+						public function get_name() {
+							return 'bluefin_gateway'; // Must match your $this->id
+						}
 
-			public function initialize() {
-				// woocommmerce_ + this->id + _settings
-				$this->settings = get_option( 'woocommerce_bluefin_gateway_settings' );
-			}
+						public function initialize() {
+							// woocommmerce_ + this->id + _settings
+							$this->settings = get_option( 'woocommerce_bluefin_gateway_settings' );
+						}
 
-			public function is_active() {
-				return true;
-			}
+						public function is_active() {
+							return true;
+						}
 
-			public function get_payment_method_script_handles() {
-				wp_register_script(
-					'bluefin-blocks',
-					plugins_url( 'assets/index.js', WC_BLUEFIN_MAIN_FILE ),
-					[ 'wc-blocks-registry', 'wp-element', 'wp-i18n' ],
-					'1.0.0',
-					true
+						public function get_payment_method_script_handles() {
+							wp_register_script(
+								'bluefin-blocks',
+								plugins_url( 'assets/index.js', WC_BLUEFIN_MAIN_FILE ),
+								[ 'wc-blocks-registry', 'wp-element', 'wp-i18n' ],
+								'1.0.0',
+								true
+							);
+							return [ 'bluefin-blocks' ];
+						}
+
+						public function get_payment_method_script_handles_for_admin() {
+							return $this->get_payment_method_script_handles();
+						}
+
+						public function get_supported_features(): array {
+							return [
+								'products',
+							];
+						}
+
+						public function get_payment_method_data() {
+							return [
+								'title'       => $this->get_setting( 'title' ),
+								'description' => $this->get_setting( 'description' ),
+								'icon'        => plugins_url( 'assets/bluefin.png', WC_BLUEFIN_MAIN_FILE ),
+								'supports'    => $this->get_supported_features(),
+							];
+						}
+					}
 				);
-				return [ 'bluefin-blocks' ];
 			}
-
-			public function get_payment_method_script_handles_for_admin() {
-				return $this->get_payment_method_script_handles();
-			}
-			
-			public function get_supported_features(): array {
-    				return [
-        				'products',
-    				];
-			}
-
-			public function get_payment_method_data() {
-				return [
-					'title'       => $this->get_setting( 'title' ),
-					'description' => $this->get_setting( 'description' ),
-					'icon'        => plugins_url( 'assets/bluefin.png', WC_BLUEFIN_MAIN_FILE ),
-					'supports'    => $this->get_supported_features(),
-				];
-			}
-		} );
-	} );
-});
+		);
+	}
+);
 
 // High-Performance Order Storage
 // See: https://developer.woocommerce.com/docs/features/high-performance-order-storage/#incompatible-plugins
 
-add_action( 'before_woocommerce_init', function() {
-	if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-			'custom_order_tables', WC_BLUEFIN_MAIN_FILE, true
-		);
-		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-			'cart_checkout_blocks', WC_BLUEFIN_MAIN_FILE, true );
+add_action(
+	'before_woocommerce_init',
+	function () {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+				'custom_order_tables',
+				WC_BLUEFIN_MAIN_FILE,
+				true
+			);
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+				'cart_checkout_blocks',
+				WC_BLUEFIN_MAIN_FILE,
+				true
+			);
+		}
 	}
-});
+);

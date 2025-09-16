@@ -6,35 +6,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Communicating with Bluefin API.
  */
- 
+
 class WC_Bluefin_API {
 
 	// const ENDPOINT           = 'https://api.payconex.net/';
 	// const BLUEFIN_API_VERSION = '2025-08-19';
 
 	const api_postfix = '/api/v4/accounts/';
-	
+
 	private static $endpoint = '';
 
 	private static $use_sandbox = true;
-	
+
 	private static $account_id = '';
-	
+
 	private static $api_key_secret = '';
-	
+
 	private static $api_key_id = '';
 
 	private static $iframe_config_id = '';
 
-	private static $threeDSecureInitSettings = array();
-	
-	
+	private static $threeDSecureInitSettings = [];
+
+
 	public static function generate_headers() {
-		$headers = array();
+		$headers = [];
 
 		$headers['Content-Type'] = 'application/json';
 
-		if(self::$use_sandbox) {
+		if ( self::$use_sandbox ) {
 			$headers['Authorization'] = 'Basic ' . base64_encode( self::$api_key_id . ':' . self::$api_key_secret );
 		} else {
 			// TODO: HMAC
@@ -43,37 +43,36 @@ class WC_Bluefin_API {
 		return $headers;
 	}
 
-	
-	public static function set_endpoint($endpoint) {
+
+	public static function set_endpoint( $endpoint ) {
 		self::$endpoint = $endpoint;
 	}
-	
-	public static function set_account_id($account_id) {
+
+	public static function set_account_id( $account_id ) {
 		self::$account_id = $account_id;
 	}
-	
-	public static function set_api_key_secret($secret) {
+
+	public static function set_api_key_secret( $secret ) {
 		self::$api_key_secret = $secret;
 	}
-	
-	public static function set_api_key_id($id) {
+
+	public static function set_api_key_id( $id ) {
 		self::$api_key_id = $id;
 	}
 
-	public static function set_iframe_config_id($id) {
+	public static function set_iframe_config_id( $id ) {
 		self::$iframe_config_id = $id;
 	}
 
-	public static function set_env($use_sandbox) {
+	public static function set_env( $use_sandbox ) {
 		self::$use_sandbox = $use_sandbox;
 	}
-	
-	
-	public static function POST_request($url, $request, $headers) {
+
+
+	public static function POST_request( $url, $request, $headers ) {
 		$method = 'POST';
 
-		$request_string = json_encode($request);
-
+		$request_string = json_encode( $request );
 
 		$response = wp_safe_remote_post(
 			$url,
@@ -87,13 +86,13 @@ class WC_Bluefin_API {
 
 		// WC_Bluefin_Logger::log(print_r( $response['response']['code'], true ));
 
-		if( is_wp_error( $response ) ) {
+		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
 			WC_Bluefin_Logger::error(
 				"Bluefin API error: {$method} {$url}",
 				[
-					'request'         => $request_string,
-					'response'        => $response,
+					'request'  => $request_string,
+					'response' => $response,
 				]
 			);
 			throw new WC_Bluefin_Exception( $error_message );
@@ -104,8 +103,8 @@ class WC_Bluefin_API {
 			WC_Bluefin_Logger::error(
 				"Bluefin API error: {$method} {$url}",
 				[
-					'request'         => $request_string,
-					'response'        => $response,
+					'request'  => $request_string,
+					'response' => $response,
 				]
 			);
 
@@ -113,119 +112,115 @@ class WC_Bluefin_API {
 		}
 
 		return json_decode( $response['body'], true );
-
 	}
 
-	public static function v4_init_iframe($request_json) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id . 
-				"/payment-iframe/" . self::$iframe_config_id . '/instance/init';
+	public static function v4_init_iframe( $request_json ) {
+		$url = self::$endpoint . self::api_postfix . self::$account_id .
+				'/payment-iframe/' . self::$iframe_config_id . '/instance/init';
 		// WC_Bluefin_Logger::log('URL: ' . $url);
-		
+
 		$user_id = get_current_user_id();
-		
+
 		$tokens = array_map(
-			function ($item) {
+			function ( $item ) {
 				return $item->token;
 			},
-			WC_Payment_Token_Bluefin::get_tokens( $user_id ));
+			WC_Payment_Token_Bluefin::get_tokens( $user_id )
+		);
 
 		$iframe_init_config = [
-			"label" => "my-instance-1",
-  			"amount" => $request_json["total_price"],
-			"customer" => $request_json["customer"],
-			"bfTokenReferences" => $tokens,
-			"initializeTransaction" => true,
-  			"threeDSecureInitSettings" => [
-    				"transactionType" => "GOODS_SERVICE_PURCHASE",
-    				"deliveryTimeFrame" => "ELECTRONIC_DELIVERY",
-    				"threeDSecureChallengeIndicator" => "NO_PREFERENCE",
-    				"reorderIndicator" => "FIRST_TIME_ORDERED",
-    				"shippingIndicator" => "DIGITAL_GOODS"
-  			]
+			'label'                    => 'my-instance-1',
+			'amount'                   => $request_json['total_price'],
+			'customer'                 => $request_json['customer'],
+			'bfTokenReferences'        => $tokens,
+			'initializeTransaction'    => true,
+			'threeDSecureInitSettings' => [
+				'transactionType'                => 'GOODS_SERVICE_PURCHASE',
+				'deliveryTimeFrame'              => 'ELECTRONIC_DELIVERY',
+				'threeDSecureChallengeIndicator' => 'NO_PREFERENCE',
+				'reorderIndicator'               => 'FIRST_TIME_ORDERED',
+				'shippingIndicator'              => 'DIGITAL_GOODS',
+			],
 		];
-		
-		if(isset($request_json['shippingaddress'])) {
+
+		if ( isset( $request_json['shippingaddress'] ) ) {
 			$iframe_init_config['shippingAddress'] = $request_json['shippingaddress'];
 		}
-		
-		
-		$res = self::POST_request($url, $iframe_init_config, self::generate_headers());
+
+		$res = self::POST_request( $url, $iframe_init_config, self::generate_headers() );
 
 		return $res;
 	}
 
-	public static function v4_refund($transaction) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id . 
-				"/payments/" . $transaction['transactionId'] . "/refund";
+	public static function v4_refund( $transaction ) {
+		$url = self::$endpoint . self::api_postfix . self::$account_id .
+				'/payments/' . $transaction['transactionId'] . '/refund';
 
 		$refund_req = [
-			"posProfile" => "ECOMMERCE",
-			"description" => $transaction["description"],
-			"amounts"     => $transaction["amounts"],
+			'posProfile'  => 'ECOMMERCE',
+			'description' => $transaction['description'],
+			'amounts'     => $transaction['amounts'],
 		];
 
-		$res = self::POST_request($url, $refund_req, self::generate_headers());
+		$res = self::POST_request( $url, $refund_req, self::generate_headers() );
 
 		return $res;
 	}
 
-	public static function v4_capture($transaction) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id . 
-				"/payments/" . $transaction['transactionId'] . "/capture";
+	public static function v4_capture( $transaction ) {
+		$url = self::$endpoint . self::api_postfix . self::$account_id .
+				'/payments/' . $transaction['transactionId'] . '/capture';
 
 		$capture_req = [
-			"posProfile" => "ECOMMERCE",
+			'posProfile' => 'ECOMMERCE',
 		];
 
-		$res = self::POST_request($url, $capture_req, self::generate_headers());
+		$res = self::POST_request( $url, $capture_req, self::generate_headers() );
 
 		return $res;
 	}
 
-	public static function v4_auth($transaction) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id . 
-				"/payments/auth";
+	public static function v4_auth( $transaction ) {
+		$url = self::$endpoint . self::api_postfix . self::$account_id .
+				'/payments/auth';
 
 		$auth_req = [
-			"transactionId" => $transaction["transactionId"],
-			"posProfile" => "ECOMMERCE",
-			"amounts" => [
-				"total" => $transaction['total'],
-				"currency" => $transaction['currency'],
+			'transactionId'    => $transaction['transactionId'],
+			'posProfile'       => 'ECOMMERCE',
+			'amounts'          => [
+				'total'    => $transaction['total'],
+				'currency' => $transaction['currency'],
 			],
-			"trace" => [
-				"source" => "WooCommerce Store"
+			'trace'            => [
+				'source' => 'WooCommerce Store',
 			],
-			"bfTokenReference" => $transaction["bftokenreference"],
+			'bfTokenReference' => $transaction['bftokenreference'],
 		];
 
-		$res = self::POST_request($url, $auth_req, self::generate_headers());
-		
+		$res = self::POST_request( $url, $auth_req, self::generate_headers() );
+
 		return $res;
 	}
 
-	public static function v4_sale($transaction) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id . 
-				"/payments/sale";
+	public static function v4_sale( $transaction ) {
+		$url = self::$endpoint . self::api_postfix . self::$account_id .
+				'/payments/sale';
 
 		$sale_req = [
-			"transactionId" => $transaction["transactionId"],
-			"posProfile" => "ECOMMERCE",
-			"amounts" => [
-				"total" => $transaction['total'],
-				"currency" => $transaction['currency'],
+			'transactionId'    => $transaction['transactionId'],
+			'posProfile'       => 'ECOMMERCE',
+			'amounts'          => [
+				'total'    => $transaction['total'],
+				'currency' => $transaction['currency'],
 			],
-			"trace" => [
-				"source" => "WooCommerce Store"
+			'trace'            => [
+				'source' => 'WooCommerce Store',
 			],
-			"bfTokenReference" => $transaction["bftokenreference"],
+			'bfTokenReference' => $transaction['bftokenreference'],
 		];
 
-		$res = self::POST_request($url, $sale_req, self::generate_headers());
-		
-		return $res;
+		$res = self::POST_request( $url, $sale_req, self::generate_headers() );
 
+		return $res;
 	}
-	
-	
 }
