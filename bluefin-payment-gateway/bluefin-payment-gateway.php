@@ -12,24 +12,20 @@
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
  
-// TODO: Plugin URI: https://wordpress.org/plugins/bluefin-payment-gateway/
+// TODO: Plugin URI: https://wordpress.org/plugins/bluefin-payment-gateway
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/*
-if ( ! defined( 'MAIN_PLUGIN_FILE' ) ) {
-	define( 'MAIN_PLUGIN_FILE', __FILE__ );
-}
- */
-
 define( 'WC_BLUEFIN_MAIN_FILE', __FILE__ );
 
 define( 'WC_BLUEFIN_PLUGIN_PATH', untrailingslashit( plugin_dir_path( WC_BLUEFIN_MAIN_FILE ) ) );
 
+define( 'WC_BLUEFIN_MIN_WC_VER', '10.0' );
 
-// TODO: Exclude vendor since we are not using any third parties
+
+// NOTE: Exclude /vendor for size reduction after build
 // require_once WC_BLUEFIN_PLUGIN_PATH . '/vendor/autoload_packages.php'; // plugin_dir_path( __FILE__ )
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
@@ -81,6 +77,16 @@ function woocommerce_bluefin_gateway() {
 	return $plugin;
 }
 
+/**
+ * WooCommerce not supported fallback notice.
+ *
+ * @since 4.4.0
+ */
+function woocommerce_bluefin_wc_not_supported() {
+	/* translators: $1. Minimum WooCommerce version. $2. Current WooCommerce version. */
+	echo '<div class="error"><p><strong>' . sprintf( esc_html__( 'Bluefin Payment Gateway requires WooCommerce %1$s or greater to be installed and active. WooCommerce %2$s is no longer supported.', 'bluefin-payment-gateway' ), esc_html( WC_BLUEFIN_MIN_WC_VER ), esc_html( WC_VERSION ) ) . '</strong></p></div>';
+}
+
 
 add_action( 'plugins_loaded', 'bluefin_payment_gateway_init', 10 );
 
@@ -91,9 +97,17 @@ add_action( 'plugins_loaded', 'bluefin_payment_gateway_init', 10 );
  */
 function bluefin_payment_gateway_init() {
 	load_plugin_textdomain( 'bluefin-payment-gateway', false, plugin_basename( dirname( WC_BLUEFIN_MAIN_FILE ) ) . '/languages' );
-
+	
+	// add_action( 'admin_notices', 'bluefin_payment_gateway_missing_wc_notice' );
+	// wp_admin_notice( 'There was an error!', [ 'type' => 'error' ] );
+	
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		add_action( 'admin_notices', 'bluefin_payment_gateway_missing_wc_notice' );
+		return;
+	}
+	
+	if ( version_compare( WC_VERSION, WC_BLUEFIN_MIN_WC_VER, '<' ) ) {
+		add_action( 'admin_notices', 'woocommerce_bluefin_wc_not_supported' );
 		return;
 	}
 
@@ -156,11 +170,10 @@ add_action( 'woocommerce_blocks_loaded', function() {
 
 add_action( 'before_woocommerce_init', function() {
 	if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-		// \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-		// 	'cart_checkout_blocks', WC_BLUEFIN_MAIN_FILE, true );
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
 			'custom_order_tables', WC_BLUEFIN_MAIN_FILE, true
 		);
-		// \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', WC_BLUEFIN_MAIN_FILE, true );
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+			'cart_checkout_blocks', WC_BLUEFIN_MAIN_FILE, true );
 	}
 });
