@@ -9,7 +9,7 @@
 		"format": "wp-scripts format",
 		"lint:css": "wp-scripts lint-style",
 		"lint:js": "wp-scripts lint-js",
-		"lint:js-fix": "eslint . --ext=js,jsx,ts,tsx --fix",
+		"lint:js-fix": "eslint ./src --ext=js,jsx,ts,tsx --fix",
 		"lint:php": "./vendor/bin/phpcs --standard=phpcs.xml.dist -n $(git ls-files | grep .php$)",
 		"lint:php-fix": "./vendor/bin/phpcbf --standard=phpcs.xml.dist $(git ls-files | grep .php$)",
 		"packages-update": "wp-scripts packages-update",
