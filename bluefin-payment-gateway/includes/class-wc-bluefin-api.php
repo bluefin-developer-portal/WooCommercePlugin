@@ -120,18 +120,27 @@ class WC_Bluefin_API {
 		$url = self::$endpoint . self::api_postfix . self::$account_id . 
 				"/payment-iframe/" . self::$iframe_config_id . '/instance/init';
 		// WC_Bluefin_Logger::log('URL: ' . $url);
+		
+		$user_id = get_current_user_id();
+		
+		$tokens = array_map(
+			function ($item) {
+				return $item->token;
+			},
+			WC_Payment_Token_Bluefin::get_tokens( $user_id ));
 
 		$iframe_init_config = [
 			"label" => "my-instance-1",
   			"amount" => $request_json["total_price"],
 			"customer" => $request_json["customer"],
+			"bfTokenReferences" => $tokens,
 			"initializeTransaction" => true,
   			"threeDSecureInitSettings" => [
-    			"transactionType" => "GOODS_SERVICE_PURCHASE",
-    			"deliveryTimeFrame" => "ELECTRONIC_DELIVERY",
-    			"threeDSecureChallengeIndicator" => "NO_PREFERENCE",
-    			"reorderIndicator" => "FIRST_TIME_ORDERED",
-    			"shippingIndicator" => "DIGITAL_GOODS"
+    				"transactionType" => "GOODS_SERVICE_PURCHASE",
+    				"deliveryTimeFrame" => "ELECTRONIC_DELIVERY",
+    				"threeDSecureChallengeIndicator" => "NO_PREFERENCE",
+    				"reorderIndicator" => "FIRST_TIME_ORDERED",
+    				"shippingIndicator" => "DIGITAL_GOODS"
   			]
 		];
 		

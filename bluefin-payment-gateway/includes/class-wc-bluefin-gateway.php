@@ -127,7 +127,8 @@ add_action( 'admin_notices', function() {
         echo '</p></div>';
 });
 
-*/	
+*/
+				
 	}
 	
 	public function setup_static_API() {
@@ -206,6 +207,7 @@ add_action( 'admin_notices', function() {
 		wp_localize_script('bluefin-plugin', 'bluefinPlugin', [
 			'generate_bearer_token_url' => esc_url_raw(rest_url('wc_bluefin/v1/generate_bearer_token')),
 			'cc_endpoint' 				=> $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
+			// 'current_customer_id'				=> get_current_user_id(),
 			'nonce'    					=> wp_create_nonce('wp_rest'),
 		]);
 	}
@@ -360,6 +362,21 @@ add_action( 'admin_notices', function() {
 			$order->add_meta_data('bluefinTransactionId', $trans_resp['transactionId']);
 			
 			if($this->is_token_vaulted($trans_resp)) {
+				// UNUSED UNLESS it is specifically used by a certain merchant
+				$token = new WC_Payment_Token_Bluefin();
+				
+				$token->set_token( $trans_resp['bfTokenReference'] );
+				
+				$token->set_user_id( get_current_user_id() );
+				
+				$token->save();
+				
+				// $tokens = WC_Payment_Token_Bluefin::get_tokens( get_current_user_id() );
+				
+				// WC_Bluefin_Logger::log('WC_Payment_Tokens: ' . json_encode($tokens));
+			
+				/*
+				// UNUSED UNLESS it is specifically used by a certain merchant
 				$token = new WC_Payment_Token_Bluefin();
 				
 				$token->set_token( $trans_resp['bfTokenReference'] );
@@ -375,7 +392,10 @@ add_action( 'admin_notices', function() {
 				
 				foreach($tokens  as $key=>$value) {
 					WC_Bluefin_Logger::log('WC_Payment_Token token: ' . $value->get_token());
+					WC_Payment_Tokens::delete($value->get_id());
 				}
+				
+				*/
 			}
 
 			// See: https://woocommerce.github.io/code-reference/classes/Automattic-WooCommerce-Enums-OrderStatus.html

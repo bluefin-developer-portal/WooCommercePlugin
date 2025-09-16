@@ -90,11 +90,32 @@ function woocommerce_bluefin_wc_not_supported() {
 
 add_action( 'plugins_loaded', 'bluefin_payment_gateway_init', 10 );
 
+
+function create_token_table() {
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . 'woocommerce_bluefin_payment_gateway_reference_tokens';
+
+	$charset_collate = $wpdb->get_charset_collate();
+
+	// See: https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/class-wc-install.php#L1961
+	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+	    id bigint(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	    customer_id bigint(20) unsigned NULL,
+	    token varchar(64) NOT NULL
+	) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	
+	dbDelta( $sql );
+}
+
 /**
  * Initialize the plugin.
  *
  * @since 0.1.0
  */
+ 
 function bluefin_payment_gateway_init() {
 	load_plugin_textdomain( 'bluefin-payment-gateway', false, plugin_basename( dirname( WC_BLUEFIN_MAIN_FILE ) ) . '/languages' );
 	
@@ -110,6 +131,9 @@ function bluefin_payment_gateway_init() {
 		add_action( 'admin_notices', 'woocommerce_bluefin_wc_not_supported' );
 		return;
 	}
+	
+	create_token_table();
+	
 
 	woocommerce_bluefin_gateway();
 
