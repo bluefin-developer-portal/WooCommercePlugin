@@ -10,8 +10,15 @@ jQuery(function ($) {
         let add_capture = typeof (search) == 'string'
             && search.includes('?page=wc-orders&action=edit')
             && capture_button
-
-        add_capture && console.debug('capture_button:', capture_button, window.location)
+        
+        
+        if(add_capture) {
+        	console.debug('capture_button:', capture_button, window.location)
+        	let refund_button = document.querySelector('.button.refund-items')
+        	
+        	refund_button && refund_button.remove()
+        	
+        }
 
         add_capture && capture_button.addEventListener('click', async function () {
 

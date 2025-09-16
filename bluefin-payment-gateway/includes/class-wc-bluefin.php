@@ -25,15 +25,21 @@ class bluefin_payment_gateway {
 
 		$this->init();
 		
+		
+		
 		// Register Routes
 		add_action('rest_api_init', [ $this, 'register_routes' ]);
 
 		add_action('woocommerce_admin_order_data_after_billing_address', [ $this, 'bf_transaction_id_order_meta' ], 10, 1);
 
 		add_action('woocommerce_after_order_details', [ $this, 'bf_transaction_id_order_checkout_meta' ]);
+		
+		// Admin Script must be here in order to load in admin mode for orders
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_scripts' ] );
 
 		
 	}
+	
 
 	public function init() {
 		require_once WC_BLUEFIN_PLUGIN_PATH . '/includes/class-wc-bluefin-defaults.php';
@@ -80,6 +86,15 @@ class bluefin_payment_gateway {
 		}
 		
 		return (array) $links;
+	}
+	
+	public function admin_scripts() {
+			wp_enqueue_script('bluefin-plugin-admin', plugins_url( 'assets/plugin_admin.js', WC_BLUEFIN_MAIN_FILE ), ['wp-element'], null, true);
+			
+			wp_localize_script('bluefin-plugin-admin', 'bluefinPlugin', [
+				'capture_url' => esc_url_raw(rest_url('wc_bluefin/v1/capture_transaction')),
+				'nonce'    => wp_create_nonce('wp_rest'),
+			]);
 	}
 	
 	public function register_routes() {

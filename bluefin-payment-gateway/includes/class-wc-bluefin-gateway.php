@@ -82,7 +82,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		$this->setup_static_API();
 
 
-		add_action( 'admin_enqueue_scripts', [ $this, 'admin_scripts' ] );
+		
 		add_action('wp_enqueue_scripts',  [ $this, 'payment_scripts' ]);
 
 
@@ -98,7 +98,23 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		// Note: display error is in the parent class.
 		add_action( 'admin_notices', [ $this, 'display_errors' ], 9999 );
 
+		add_action('woocommerce_order_item_add_action_buttons', [ $this, 'reverse_auth']);
+		
 		add_action('woocommerce_order_item_add_action_buttons', [ $this, 'capture_payment']);
+		
+		/*
+		function should_refund($order) {
+			// WC_Bluefin_Logger::log('should refund: ' . strval($order));
+			if($order->get_status() == OrderStatus::ON_HOLD) {
+				return false;
+			}
+			return true;
+		}
+		
+		// TODO: TBD: DO THIS BUT MAKE YOUR OWN REFUND
+		add_filter( 'woocommerce_admin_order_should_render_refunds', 'should_refund');
+		
+		*/
 		
 		/*
 add_action( 'admin_notices', function() {
@@ -191,14 +207,7 @@ add_action( 'admin_notices', function() {
 			]);
 	}
 
-	public function admin_scripts() {
-			wp_enqueue_script('bluefin-plugin-admin', plugins_url( 'assets/plugin_admin.js', WC_BLUEFIN_MAIN_FILE ), ['wp-element'], null, true);
-			
-			wp_localize_script('bluefin-plugin-admin', 'bluefinPlugin', [
-				'capture_url' => esc_url_raw(rest_url('wc_bluefin/v1/capture_transaction')),
-				'nonce'    => wp_create_nonce('wp_rest'),
-			]);
-	}
+
 
 	public function update_options() {
 		foreach($this->form_fields as $key=>$value) {
@@ -221,7 +230,13 @@ add_action( 'admin_notices', function() {
 		return false;
 	}
 
-
+	public function reverse_auth( $order ) {
+		if($order->get_status() == OrderStatus::ON_HOLD) {
+			echo '<button type="button" class="button" id="bluefin_reverse_auth_button"' 
+				. ' data-order-id=' . strval($order->get_id()) . '>' 
+				. 'Reverse Auth' . '</button>';
+		}
+	}
 
 	public function capture_payment( $order ) {
 		if($order->get_status() == OrderStatus::ON_HOLD) {
@@ -238,8 +253,10 @@ add_action( 'admin_notices', function() {
 		$order = wc_get_order( $order_id );
 
 		$transaction_id = $order->get_meta('bluefinTransactionId');
+		
+		$current_order_amount = $order->get_total() - (floatval($order->get_total_refunded()) - $amount);
 
-		WC_Bluefin_Logger::log('process_refund: ' . $transaction_id . ' ' . ' order total: ' . strval($order->get_total()) . ' ' . strval($amount) . ' reason: ' . $reason );
+		WC_Bluefin_Logger::log('process_refund: ' . $transaction_id . ' ' . ' order total: ' . strval($order->get_total()) . ' ' . strval($amount) . ' reason: ' . $reason . ' total refund: ' . strval(floatval($order->get_total_refunded())) . ' current amount: ' . strval($current_order_amount) );
 
 		try {
 
@@ -251,16 +268,25 @@ add_action( 'admin_notices', function() {
 					"currency" => "USD",
 				]
 			]);
-
-			// TODO: $order->get_total isn't always the same after the first refund.
-			if($order->get_total() != $amount) {
+			
+			if($current_order_amount != $amount) {
 				// Partially Refunded
-				// TODO: add $order->add_order_note("AUTHORIZED"); since the order status is the same in this case
-				$order->update_status( OrderStatus::COMPLETED, sprintf( __( 'Transaction Partially Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
+				// Do add_order_note since the order status is the same in this case
+				// TODO: Add that refunded transaction id
+				if($order->get_status() == OrderStatus::COMPLETED) { // In the case of the same status
+					$order->add_order_note(
+						sprintf( __( 'Transaction Partially Refunded via Bluefin', 'bluefin-payment-gateway' ) )
+					);
+				}
+				// $order->update_status( OrderStatus::COMPLETED, sprintf( __( 'Transaction Partially Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
 			} else {
 				// Full Refund
-				$order->update_status( OrderStatus::REFUNDED, sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
+				// $order->update_status( OrderStatus::REFUNDED, sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
+				$order->add_order_note(
+					sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) )
+				);
 			}
+			
 			$order->save();
 
 			// Indicating success
@@ -306,6 +332,8 @@ add_action( 'admin_notices', function() {
 					"currency" => "USD",
 					"bftokenreference" => $request_data["bftokenreference"]
 				]);
+				
+				$order->add_meta_data('bluefinTransType', 'auth');
 
 				$order->update_status( OrderStatus::ON_HOLD, sprintf( __( 'Bluefin Transaction Authorized', 'bluefin-payment-gateway' ) ) );
 
@@ -316,11 +344,14 @@ add_action( 'admin_notices', function() {
 					"currency" => "USD",
 					"bftokenreference" => $request_data["bftokenreference"]
 				]);
+				
+				$order->add_meta_data('bluefinTransType', 'sale');
 
 				$order->update_status( OrderStatus::COMPLETED, sprintf( __( 'Bluefin Sale Transaction Processed', 'bluefin-payment-gateway' ) ) );
 			}
 
 			$order->add_meta_data('bluefinTransactionId', $trans_resp['transactionId']);
+			
 		
 
 			// See: https://woocommerce.github.io/code-reference/classes/Automattic-WooCommerce-Enums-OrderStatus.html
