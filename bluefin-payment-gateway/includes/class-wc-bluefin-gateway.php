@@ -239,7 +239,7 @@ add_action( 'admin_notices', function() {
 
 		$transaction_id = $order->get_meta('bluefinTransactionId');
 
-		WC_Bluefin_Logger::log('process_refund: ' . $transaction_id . ' ' . strval($amount) . ' reason: ' . $reason );
+		WC_Bluefin_Logger::log('process_refund: ' . $transaction_id . ' ' . ' order total: ' . strval($order->get_total()) . ' ' . strval($amount) . ' reason: ' . $reason );
 
 		try {
 
