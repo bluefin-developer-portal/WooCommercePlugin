@@ -94,6 +94,9 @@ add_action( 'plugins_loaded', 'bluefin_payment_gateway_init', 10 );
 function create_token_table() {
 	global $wpdb;
 
+	// Create the table under the woocommerce namespace
+	// See: `SHOW TABLES;`
+	// OR: https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/data-stores/abstract-wc-order-item-type-data-store.php#L74
 	$table_name = $wpdb->prefix . 'woocommerce_bluefin_payment_gateway_reference_tokens';
 
 	$charset_collate = $wpdb->get_charset_collate();
