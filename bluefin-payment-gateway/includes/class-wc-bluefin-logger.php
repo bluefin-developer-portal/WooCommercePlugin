@@ -19,6 +19,12 @@ class WC_Bluefin_Logger {
 
 
 	public static $logger;
+	
+	public static $logger_enabled;
+	
+	public static function set_logger_enabled(bool $enabled) {
+		self::$logger_enabled = $enabled;
+	}
 
 	/**
 	 * Utilize WC logger class
@@ -233,8 +239,6 @@ class WC_Bluefin_Logger {
 	 * @return boolean
 	 */
 	public static function can_log(): bool {
-		// TODO: Implement - Probably take from the options
-		
-		return true;
+		return self::$logger_enabled;
 	}
 }

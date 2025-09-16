@@ -20,6 +20,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 	
 	protected $merchant_api_key_secret;
 	
+	protected $enable_logging;
+	
 	protected $use_sandbox;
 
 	protected $use_auth_only;
@@ -70,18 +72,19 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		$this->title        = $this->get_option('title');
 		$this->description  = $this->get_option('description');
 		
+		$this->enable_logging = 'yes' === $this->get_option('enable_logging', 'yes');
+		
 		$this->account_id = $this->get_option('account_id');
 		$this->merchant_api_key_id = $this->get_option('merchant_api_key_id');
 		$this->merchant_api_key_secret = $this->get_option('merchant_api_key_secret');
 		$this->use_sandbox = 'yes' === $this->get_option('use_sandbox', 'yes');
 		$this->iframe_config_id = $this->get_option('iframe_config_id');
 		$this->use_auth_only = 'yes' === $this->get_option('use_auth_only', 'no');
+		
 
 		// WC_Bluefin_Logger::log('DEBUG: ' . $this->id . ' ' . $this->plugin_id);
 		
 		$this->setup_static_API();
-
-
 		
 		add_action('wp_enqueue_scripts',  [ $this, 'payment_scripts' ]);
 
@@ -128,7 +131,7 @@ add_action( 'admin_notices', function() {
 	}
 	
 	public function setup_static_API() {
-	
+		// WC_Bluefin_API
 		WC_Bluefin_API::set_account_id($this->account_id);
 		WC_Bluefin_API::set_api_key_id($this->merchant_api_key_id);
 		WC_Bluefin_API::set_api_key_secret($this->merchant_api_key_secret);
@@ -137,19 +140,19 @@ add_action( 'admin_notices', function() {
 			WC_Bluefin_Defaults::cert_env : WC_Bluefin_Defaults::prod_env);
 
 		WC_Bluefin_API::set_iframe_config_id($this->iframe_config_id);
-
 		WC_Bluefin_API::set_env($this->use_sandbox);
+		
+		// WC_Bluefin_Logger
+		WC_Bluefin_Logger::set_logger_enabled($this->enable_logging);
 	
-	}
-	
-	
+	}	
 
 	public function validate_account_id_field( $key, $value ) {
-    	if ( empty( $value ) ) {
-        	WC_Admin_Settings::add_error( __( 'Bluefin Account Identifier is required.', 'bluefin-payment-gateway' ) );
-        	return $this->get_option( $key ); // Note: Keep old value
-    	}
-    	return $value;
+    		if ( empty( $value ) ) {
+        		WC_Admin_Settings::add_error( __( 'Bluefin Account Identifier is required.', 'bluefin-payment-gateway' ) );
+        		return $this->get_option( $key ); // Note: Keep old value
+    		}
+    		return $value;
 	}
 	
 	/*
@@ -196,15 +199,15 @@ add_action( 'admin_notices', function() {
 	
 	
 	public function payment_scripts() {
-			wp_enqueue_script('bluefin-plugin', plugins_url( 'assets/index.js', WC_BLUEFIN_MAIN_FILE ), ['wp-element'], null, true);
+		wp_enqueue_script('bluefin-plugin', plugins_url( 'assets/index.js', WC_BLUEFIN_MAIN_FILE ), ['wp-element'], null, true);
 
-			wp_enqueue_script('bluefin-sdk', WC_Bluefin_Defaults::script_path, ['wp-element'], null, true);
+		wp_enqueue_script('bluefin-sdk', WC_Bluefin_Defaults::script_path, ['wp-element'], null, true);
 
-			wp_localize_script('bluefin-plugin', 'bluefinPlugin', [
-				'generate_bearer_token_url' => esc_url_raw(rest_url('wc_bluefin/v1/generate_bearer_token')),
-				'cc_endpoint' 				=> $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
-				'nonce'    					=> wp_create_nonce('wp_rest'),
-			]);
+		wp_localize_script('bluefin-plugin', 'bluefinPlugin', [
+			'generate_bearer_token_url' => esc_url_raw(rest_url('wc_bluefin/v1/generate_bearer_token')),
+			'cc_endpoint' 				=> $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
+			'nonce'    					=> wp_create_nonce('wp_rest'),
+		]);
 	}
 
 
@@ -304,6 +307,10 @@ add_action( 'admin_notices', function() {
 	}
 
 
+	private function is_token_vaulted($trans_resp) {
+		return isset( $trans_resp[ 'bfTokenReference' ] );
+	}
+
 	// Process the payment
 	public function process_payment( $order_id ) {
 		$request_data = $_POST;
@@ -352,7 +359,24 @@ add_action( 'admin_notices', function() {
 
 			$order->add_meta_data('bluefinTransactionId', $trans_resp['transactionId']);
 			
-		
+			if($this->is_token_vaulted($trans_resp)) {
+				$token = new WC_Payment_Token_Bluefin();
+				
+				$token->set_token( $trans_resp['bfTokenReference'] );
+				$token->set_gateway_id( $this->id );
+				
+				$token->set_user_id( get_current_user_id() );
+				
+				$token->save();
+				
+				$tokens = WC_Payment_Tokens::get_customer_tokens( get_current_user_id(), $this->id );
+				
+				WC_Bluefin_Logger::log('WC_Payment_Tokens: ' . json_encode($tokens));
+				
+				foreach($tokens  as $key=>$value) {
+					WC_Bluefin_Logger::log('WC_Payment_Token token: ' . $value->get_token());
+				}
+			}
 
 			// See: https://woocommerce.github.io/code-reference/classes/Automattic-WooCommerce-Enums-OrderStatus.html
 			// See: https://woocommerce.com/document/managing-orders/order-statuses/
@@ -367,11 +391,10 @@ add_action( 'admin_notices', function() {
 
 			// $order->payment_complete();
 
-			WC_Bluefin_Logger::log('process_payment $order->meta_data: ' . json_encode($order->meta_data));
+			// WC_Bluefin_Logger::log('process_payment $order->meta_data: ' . json_encode($order->meta_data));
 
 			// Remove cart.
 			// WC()->cart->empty_cart();
-
 
 			// Redirect to thank you page
 			return [

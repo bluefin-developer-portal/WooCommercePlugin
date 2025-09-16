@@ -24,6 +24,14 @@ $bluefin_settings = [
 		'description' => __( 'Payment method description.', 'bluefin-payment-gateway' ),
 		'default'     => __( 'Pay securely with Bluefin Payment Gateway.', 'bluefin-payment-gateway' ),
 	],
+	'enable_logging' => [
+		'title'       => __( 'Enable Logging', 'bluefin-payment-gateway' ),
+		'type'        => 'checkbox',
+		'description' => __( 'Enable Logging for debugging purposes. This setting is primarily used in development.', 'bluefin-payment-gateway' ),
+		'label'   => __( 'Enable Logging', 'bluefin-payment-gateway' ),
+		'default'     => 'yes',
+		'desc_tip'    => true,
+	],
 	'account_id' => [
 		'title'       => __( 'Account Identifier', 'bluefin-payment-gateway' ),
 		'type'        => 'text',

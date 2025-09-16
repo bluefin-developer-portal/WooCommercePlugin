@@ -46,6 +46,7 @@ class bluefin_payment_gateway {
 		require_once WC_BLUEFIN_PLUGIN_PATH . '/includes/class-wc-bluefin-exception.php';
 		require_once WC_BLUEFIN_PLUGIN_PATH . '/includes/class-wc-bluefin-logger.php';
 		
+		require_once WC_BLUEFIN_PLUGIN_PATH . '/includes/payment-tokens/class-wc-bluefin-payment-token-reference.php';
 		
 		include_once WC_BLUEFIN_PLUGIN_PATH . '/includes/class-wc-bluefin-api.php';
 		
