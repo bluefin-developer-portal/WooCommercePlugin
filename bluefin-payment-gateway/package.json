@@ -11,8 +11,7 @@
 		"lint:js": "wp-scripts lint-js",
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip",
-		"start": "wp-scripts start --blocks-manifest",
-		"postinstall": "composer install"
+		"start": "wp-scripts start --blocks-manifest"
 	},
 	"dependencies": {
 		"@wordpress/hooks": "^4.29.0",

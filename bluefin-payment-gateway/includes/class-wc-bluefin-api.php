@@ -119,23 +119,26 @@ class WC_Bluefin_API {
 	public static function v4_init_iframe($request_json) {
 		$url = self::$endpoint . self::api_postfix . self::$account_id . 
 				"/payment-iframe/" . self::$iframe_config_id . '/instance/init';
-
 		// WC_Bluefin_Logger::log('URL: ' . $url);
 
 		$iframe_init_config = [
 			"label" => "my-instance-1",
   			"amount" => $request_json["total_price"],
 			"customer" => $request_json["customer"],
-			"shippingAddress" => $request_json['shippingaddress'],
 			"initializeTransaction" => true,
   			"threeDSecureInitSettings" => [
     			"transactionType" => "GOODS_SERVICE_PURCHASE",
     			"deliveryTimeFrame" => "ELECTRONIC_DELIVERY",
     			"threeDSecureChallengeIndicator" => "NO_PREFERENCE",
     			"reorderIndicator" => "FIRST_TIME_ORDERED",
-    			"shippingIndicator" => "BILLING_ADDRESS"
+    			"shippingIndicator" => "DIGITAL_GOODS"
   			]
 		];
+		
+		if(isset($request_json['shippingaddress'])) {
+			$iframe_init_config['shippingAddress'] = $request_json['shippingaddress'];
+		}
+		
 		
 		$res = self::POST_request($url, $iframe_init_config, self::generate_headers());
 

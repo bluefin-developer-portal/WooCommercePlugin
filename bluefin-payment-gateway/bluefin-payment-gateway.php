@@ -30,7 +30,7 @@ define( 'WC_BLUEFIN_PLUGIN_PATH', untrailingslashit( plugin_dir_path( WC_BLUEFIN
 
 
 // TODO: Exclude vendor since we are not using any third parties
-require_once WC_BLUEFIN_PLUGIN_PATH . '/vendor/autoload_packages.php'; // plugin_dir_path( __FILE__ )
+// require_once WC_BLUEFIN_PLUGIN_PATH . '/vendor/autoload_packages.php'; // plugin_dir_path( __FILE__ )
 
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 
