@@ -45,6 +45,23 @@ window.bluefin_component = window.bluefin_component || {}
 
 window.bluefin_component.request = window.bluefin_component.request || {}
 
+
+function isDigit(c) {
+	return c >= '0' && c <= '9'
+}
+
+class Input {
+	static parseIntPhoneNumber(phone_string) {
+		let s = ''
+		for(let i in phone_string) {
+			let c = phone_string[i]
+			
+			if(isDigit(c)) s += c 
+		}
+		return s
+	}
+}
+
 const Label = (props) => {
 	const { PaymentMethodLabel } = props.components;
 
@@ -74,7 +91,7 @@ const Content = (props) => {
 
 	const store = select(checkoutStore);
 
-	// TODO: total_fees, total_tax - is it included in the total_price
+	// NOTE: total_price including total_fees, total_tax, etc.
 	const { currency_code, total_price } = cardTotals;
 
 	const { eventRegistration, emitResponse, onSubmit } = props;
@@ -293,7 +310,9 @@ const Content = (props) => {
 
 					if(customerData.billingAddress.phone) {
 						// TODO: Fix '+'
-						bfcustomerData.phone = '+' + customerData.billingAddress.phone
+						bfcustomerData.phone = '+' 
+							+ Input.parseIntPhoneNumber(
+								customerData.billingAddress.phone)
 					}
 
 					for (const field of shippingSchema) {
