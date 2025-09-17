@@ -15,7 +15,10 @@
 		"packages-update": "wp-scripts packages-update",
 		"plugin-zip": "wp-scripts plugin-zip",
 		"start": "wp-scripts start --blocks-manifest",
-		"postinstall": "composer install"
+		"postinstall": "composer install",
+		"test": "echo test",
+		"clean": "rm -rf node_modules yarn.lock package-lock.json",
+		"reset": "npm run clean && npm i && npm run build && npm test"
 	},
 	"dependencies": {
 		"@wordpress/hooks": "^4.29.0",

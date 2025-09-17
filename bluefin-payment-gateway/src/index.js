@@ -12,7 +12,7 @@ import { decodeEntities } from '@wordpress/html-entities';
 
 // import { RawHTML } from '@wordpress/element';
 
-import { select } from '@wordpress/data';
+import { dispatch, select } from '@wordpress/data';
 
 import {
 	paymentStore,
@@ -259,6 +259,8 @@ const Content = ( props ) => {
 
 	const store = select( cartStore );
 	
+	const checkout_store = select( checkoutStore )
+	
 	// console.debug('isCustomerDataUpdating:', store.isCustomerDataUpdating())
 
 	// NOTE: total_price including total_fees, total_tax, etc.
@@ -271,7 +273,13 @@ const Content = ( props ) => {
 	const { eventRegistration, emitResponse, onSubmit } = props;
 
 	const { onPaymentSetup, onCheckoutValidation } = eventRegistration;
-
+	
+	
+	// console.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
+	
+	// console.debug('getEditingShippingAddress:', checkout_store.getEditingShippingAddress(), dispatch( checkoutStore ).setEditingShippingAddress)
+	
+	
 	useEffect( () => {
 		const unsubscribe = onPaymentSetup( async () => {
 			// Here we can do any processing we need, and then emit a response.
@@ -417,7 +425,15 @@ const Content = ( props ) => {
 					bearer_body.currency = currency_code;
 
 					console.debug( 'bearer_body:', bearer_body );
-
+					
+					
+					document.getElementById(
+					'bluefin-payment-gateway-iframe-container').addEventListener('click', function()
+						{
+							dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress");
+						})
+					
+					/*
 					// Request Bearer Token
 					resp = await fetch( generate_bearer_token_url, {
 						method: 'POST',
@@ -450,6 +466,7 @@ const Content = ( props ) => {
 						err.status = resp.status;
 						throw err;
 					}
+					*/
 				} catch ( err ) {
 					alert( err );
 				}
@@ -509,7 +526,7 @@ const Content = ( props ) => {
 	const BluefinPaymentMethod = {
 		name: PAYMENT_METHOD_NAME,
 		label: <Label />,
-		content: <Content />,
+		content: <Content onClick = {function() { dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress"); }} />,
 		edit: <Content />,
 		canMakePayment,
 		ariaLabel: label,
