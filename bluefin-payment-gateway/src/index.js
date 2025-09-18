@@ -246,7 +246,7 @@ function get_total(total_price, currency_minor_unit) {
 	let minor_unit = parseInt(currency_minor_unit)
 	
 	if(minor_unit != NaN) {
-		total = total / parseInt('1' + '0'.repeat(minor_unit))
+		total = total / Math.pow(10, minor_unit)
 	}
 	
 	return total.toString()
@@ -433,7 +433,6 @@ const Content = ( props ) => {
 							dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress");
 						})
 					
-					/*
 					// Request Bearer Token
 					resp = await fetch( generate_bearer_token_url, {
 						method: 'POST',
@@ -466,7 +465,6 @@ const Content = ( props ) => {
 						err.status = resp.status;
 						throw err;
 					}
-					*/
 				} catch ( err ) {
 					alert( err );
 				}
