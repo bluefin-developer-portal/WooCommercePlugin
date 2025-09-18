@@ -334,6 +334,7 @@ async function createAndInjectBluefinIframe(context) {
 
 		console.debug( 'fetching bearer_body:', bearer_body );
 		
+		
 		// Request Bearer Token
 		resp = await fetch( generate_bearer_token_url, {
 			method: 'POST',
@@ -448,6 +449,8 @@ const BluefinCheckout = ( props ) => {
 	
 	const customerDataAsString = () => JSON.stringify(customerData)
 	
+	const isScriptLoaded = () => window.bluefinPlugin != null
+	
 	const sameCustomerData = () => { 
 		// console.debug(customerDataAsString(), bluefin_component.customerData);
 		return bluefin_component.customerData != null && customerDataAsString() == bluefin_component.customerData
@@ -460,7 +463,6 @@ const BluefinCheckout = ( props ) => {
 	// console.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
 	
 	// console.debug('getEditingShippingAddress:', checkout_store.getEditingShippingAddress(), dispatch( checkoutStore ).setEditingShippingAddress)
-	
 	
 	useEffect( () => {
 		const unsubscribe = onPaymentSetup( async () => {
@@ -512,6 +514,8 @@ const BluefinCheckout = ( props ) => {
 	console.debug( 'Content props:', props, cardTotals, store );
 	
 	console.debug('customerDataAsString:', customerDataAsString())
+	
+	// console.debug('window.bluefinPlugin:', window.bluefinPlugin)
 
 	const iframeConfig = {
 		parentDivId: 'bluefin-payment-gateway-iframe-container',
@@ -531,7 +535,7 @@ const BluefinCheckout = ( props ) => {
 	}, [])
 	*/
 	
-	if(isEditing) {
+	if(isEditing || !isScriptLoaded() ) {
 		const iframe_container = document.querySelector(
 			'#bluefin-payment-gateway-iframe-container'
 		);
@@ -592,8 +596,7 @@ const BluefinCheckout = ( props ) => {
 			if (
 				document.querySelector(
 					'#bluefin-payment-gateway-iframe-container'
-				) != null &&
-				window.bluefinPlugin
+				) != null
 			) {
 				clearInterval( init_iframe_id );
 				
@@ -617,8 +620,6 @@ const BluefinCheckout = ( props ) => {
 
 		console.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
 		
-		if(!window.bluefinPlugin) return <div id="bluefin-payment-gateway-iframe-container"></div>;
-		
 		// Still problems with same messages doubling up.
 		// TODO: Should be fixed by the 06.2025 release. Check in then
 		// getEventListeners
@@ -637,7 +638,6 @@ const BluefinCheckout = ( props ) => {
 			const bearerToken = bluefin_component.bearerToken;
 
 			bearerToken &&
-				window.bluefinPlugin &&
 				window.IframeV2.init(
 					iframeConfig,
 					bearerToken,
@@ -701,32 +701,12 @@ const BluefinCheckout = ( props ) => {
 	return <div id="bluefin-payment-gateway-iframe-container"></div>;
 };
 
+
 /*
 const BluefinIframe = memo( function BluefinIframe (props) {
-
-	useEffect(() => {
-		console.debug('props:', props)
-		console.debug('BluefinIframe useEffect', window.bluefinPlugin)
-	}, [])
-	
-	console.debug('BluefinIframe', props)
-	
-	// dispatch( checkoutStore ).setEditingBillingAddress(true);
-	
-	
-	return <div id="bluefin-payment-gateway-iframe-container"></div>
-} )
-
-const BluefinCheckout = (props) => {
-	const checkout_store = select( checkoutStore )
-	
-	console.debug('BluefinCheckout')
-	
-	
-	let _editing = checkout_store.getEditingBillingAddress()
-	
-	
-	
+	const customerData = useSelect( ( select ) =>
+		select( CART_STORE_KEY ).getCustomerData()
+	);
 	const { isEditingShippingAddress, isEditingBillingAddress } = useSelect(
 		( select ) => {
 			const store = select( CHECKOUT_STORE_KEY );
@@ -743,6 +723,33 @@ const BluefinCheckout = (props) => {
 		[]
 	);
 	
+
+	useEffect(() => {
+		console.debug('props:', props)
+		console.debug('BluefinIframe useEffect',
+			window.bluefinPlugin,
+			JSON.stringify(customerData),
+		)
+	}, [])
+	
+	console.debug('BluefinIframe', props, JSON.stringify(customerData))
+	
+	// dispatch( checkoutStore ).setEditingBillingAddress(true);
+	
+	
+	return <div id="bluefin-payment-gateway-iframe-container"></div>
+} )
+
+const BluefinCheckout = (props) => {
+	const checkout_store = select( checkoutStore )
+	
+	console.debug('BluefinCheckout')
+	
+	
+	let _editing = checkout_store.getEditingBillingAddress()
+	
+	
+
 	
 	// Get dispatch functions to update address editing states
 	const { setEditingShippingAddress, setEditingBillingAddress } =
@@ -771,11 +778,10 @@ const BluefinCheckout = (props) => {
 
 	return <BluefinIframe
 		props = {
-			_editing
+			props
 		}
 		/>
 }
-
 */
 
 
