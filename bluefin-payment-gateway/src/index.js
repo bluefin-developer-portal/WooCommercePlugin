@@ -12,7 +12,7 @@ import { decodeEntities } from '@wordpress/html-entities';
 
 // import { RawHTML } from '@wordpress/element';
 
-import { dispatch, select } from '@wordpress/data';
+import { dispatch, select, useSelect, useDispatch } from '@wordpress/data';
 
 import {
 	paymentStore,
@@ -22,7 +22,7 @@ import {
 	CART_STORE_KEY,
 } from '@woocommerce/block-data';
 
-import { useEffect } from '@wordpress/element';
+import { useEffect, memo, useCallback } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -252,7 +252,127 @@ function get_total(total_price, currency_minor_unit) {
 	return total.toString()
 }
 
-const Content = ( props ) => {
+async function createAndInjectBluefinIframe(context) {
+	const {
+		cartData,
+		customerData,
+		total_price,
+		currency_code,
+		currency_minor_unit,
+		iframeConfig,
+		callbacks,
+	} = context
+
+	const { cc_endpoint, generate_bearer_token_url, nonce } =
+		window.bluefinPlugin;
+	
+
+	let resp = null,
+		data = null;
+		
+	
+	const iframe_container = document.querySelector(
+		'#bluefin-payment-gateway-iframe-container'
+	);
+	
+	// Still problems with same messages doubling up.
+	// TODO: Should be fixed by the 06.2025 release. Check in then
+	// getEventListeners
+	// NOTE: Prevent injecting the same iframe twice or more and start clean.
+	// NOTE: Transaction ID has already been used
+	iframe_container && ( iframe_container.innerHTML = '' );
+	
+	try {
+		const bearer_body = {};
+		
+		const {
+			shippingAddressData,
+			billingAddressData,
+			bfcustomerData
+		} = transformCustomerData(customerData)
+
+		if (
+			cartData.needsShipping &&
+			customerData.shippingAddress
+		) {
+			bearer_body.shippingaddress = shippingAddressData;
+		}
+
+		if ( customerData.billingAddress ) {
+			bfcustomerData.billingAddress = billingAddressData;
+			bearer_body.customer = bfcustomerData;
+		}
+
+		bearer_body.total_price = get_total(total_price, currency_minor_unit);
+		bearer_body.currency = currency_code;
+
+		console.debug( 'fetching bearer_body:', bearer_body );
+		
+		document.querySelector(
+		'#bluefin-payment-gateway-iframe-container').addEventListener('click', function()
+			{
+				dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress");
+			})
+		
+		// Request Bearer Token
+		resp = await fetch( generate_bearer_token_url, {
+			method: 'POST',
+			// credentials: "include",
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': nonce,
+			},
+			body: JSON.stringify( bearer_body ),
+		} );
+
+		if (
+			resp.headers
+				.get( 'content-type' )
+				.includes( 'application/json' )
+		) {
+			data = await resp.json();
+		}
+
+		console.debug(
+			`res: ${ generate_bearer_token_url }`,
+			resp
+		);
+
+		if ( ! resp.ok ) {
+			const err = new Error(
+				'HTTP status code: ' + resp.status
+			);
+			err.message = JSON.stringify( data );
+			err.status = resp.status;
+			throw err;
+		}
+	} catch ( err ) {
+		alert( err );
+	}
+	
+	
+	bluefin_component.customerData = JSON.stringify(customerData)
+
+	const bearerToken = data.iframe_instance_resp.bearerToken;
+	
+	const transactionId = data.iframe_instance_resp.transactionId;
+	
+	
+
+	bluefin_component.bearerToken = bearerToken;
+
+	bluefin_component.request.transactionid = transactionId;
+
+	window.IframeV2.init(
+		iframeConfig,
+		bearerToken,
+		callbacks,
+		null,
+		cc_endpoint
+	);
+}
+
+const BluefinCheckout = ( props ) => {
 	const customerData = select( CART_STORE_KEY ).getCustomerData();
 	const cartData = select( CART_STORE_KEY ).getCartData();
 	const cardTotals = select( CART_STORE_KEY ).getCartTotals();
@@ -260,6 +380,22 @@ const Content = ( props ) => {
 	const store = select( cartStore );
 	
 	const checkout_store = select( checkoutStore )
+	
+	const { isEditingShippingAddress, isEditingBillingAddress } = useSelect(
+		( select ) => {
+			const store = select( CHECKOUT_STORE_KEY );
+			return {
+				// Default to true if the getter function doesn't exist
+				isEditingShippingAddress: store.getEditingShippingAddress
+					? store.getEditingShippingAddress()
+					: true,
+				isEditingBillingAddress: store.getEditingBillingAddress
+					? store.getEditingBillingAddress()
+					: true,
+			};
+		},
+		[]
+	);
 	
 	// console.debug('isCustomerDataUpdating:', store.isCustomerDataUpdating())
 
@@ -274,6 +410,13 @@ const Content = ( props ) => {
 
 	const { onPaymentSetup, onCheckoutValidation } = eventRegistration;
 	
+	const isEditing = isEditingShippingAddress
+		|| isEditingBillingAddress
+	
+	
+	const customerDataAsString = () => JSON.stringify(customerData)
+	
+	const sameCustomerData = () => customerDataAsString() == bluefin_component.customerData
 	
 	// console.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
 	
@@ -327,7 +470,9 @@ const Content = ( props ) => {
 
 	// console.debug('componets: ', props.components.ValidationInputError('AAA') )
 
-	console.debug( 'Content props:', props, cardTotals );
+	console.debug( 'Content props:', props, cardTotals, );
+	
+	console.debug('customerDataAsString:', customerDataAsString())
 
 	const iframeConfig = {
 		parentDivId: 'bluefin-payment-gateway-iframe-container',
@@ -383,149 +528,224 @@ const Content = ( props ) => {
 
 	if ( ! bluefin_component.loaded ) {
 		bluefin_component.loaded = true;
+		
+		bluefin_component.customerData = JSON.stringify(customerData)
 
 		const init_iframe_id = setInterval( async () => {
 			if (
-				document.getElementById(
-					'bluefin-payment-gateway-iframe-container'
+				document.querySelector(
+					'#bluefin-payment-gateway-iframe-container'
 				) != null &&
 				window.bluefinPlugin
 			) {
-				const { cc_endpoint, generate_bearer_token_url, nonce } =
-					window.bluefinPlugin;
-
 				clearInterval( init_iframe_id );
-
-				let resp = null,
-					data = null;
-
-				// '/index.php?rest_route=/wc_bluefin/v1/generate_bearer_token'
-				try {
-					const bearer_body = {};
-					
-					const {
-						shippingAddressData,
-						billingAddressData,
-						bfcustomerData
-					} = transformCustomerData(customerData)
-
-					if (
-						cartData.needsShipping &&
-						customerData.shippingAddress
-					) {
-						bearer_body.shippingaddress = shippingAddressData;
-					}
-
-					if ( customerData.billingAddress ) {
-						bfcustomerData.billingAddress = billingAddressData;
-						bearer_body.customer = bfcustomerData;
-					}
-
-					bearer_body.total_price = get_total(total_price, currency_minor_unit);
-					bearer_body.currency = currency_code;
-
-					console.debug( 'bearer_body:', bearer_body );
-					
-					
-					document.getElementById(
-					'bluefin-payment-gateway-iframe-container').addEventListener('click', function()
-						{
-							dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress");
-						})
-					
-					// Request Bearer Token
-					resp = await fetch( generate_bearer_token_url, {
-						method: 'POST',
-						// credentials: "include",
-						headers: {
-							'Content-Type': 'application/json',
-							'X-WP-Nonce': nonce,
-						},
-						body: JSON.stringify( bearer_body ),
-					} );
-
-					if (
-						resp.headers
-							.get( 'content-type' )
-							.includes( 'application/json' )
-					) {
-						data = await resp.json();
-					}
-
-					console.debug(
-						`res: ${ generate_bearer_token_url }`,
-						resp
-					);
-
-					if ( ! resp.ok ) {
-						const err = new Error(
-							'HTTP status code: ' + resp.status
-						);
-						err.message = JSON.stringify( data );
-						err.status = resp.status;
-						throw err;
-					}
-				} catch ( err ) {
-					alert( err );
-				}
-
-				const bearerToken = data.iframe_instance_resp.bearerToken;
 				
+				if(isEditing) return
 				
-				const transactionId = data.iframe_instance_resp.transactionId;
+				await createAndInjectBluefinIframe({
+					cartData,
+					customerData,
+					total_price,
+					currency_minor_unit,
+					currency_code,
+					iframeConfig,
+					callbacks,
+				})
+				
+			}
+		}, 1111 );
+		
+	} else {
+		const iframe_container = document.querySelector(
+			'#bluefin-payment-gateway-iframe-container'
+		);
 
-				bluefin_component.bearerToken = bearerToken;
+		console.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
+		
+		if(!window.bluefinPlugin) return <div id="bluefin-payment-gateway-iframe-container"></div>;
+		
+		// Still problems with same messages doubling up.
+		// TODO: Should be fixed by the 06.2025 release. Check in then
+		// getEventListeners
+		// NOTE: Prevent injecting the same iframe twice or more and start clean.
+		// NOTE: Transaction ID has already been used
+		iframe_container && ( iframe_container.innerHTML = '' );
 
-				bluefin_component.request.transactionid = transactionId;
+		const same_customer_data = sameCustomerData()
+		
+		console.debug([
+			!isEditing && same_customer_data,
+			!isEditing && !same_customer_data,
+		])
+		
+		if(!isEditing && same_customer_data) {
+			const bearerToken = bluefin_component.bearerToken;
 
+			bearerToken &&
+				window.bluefinPlugin &&
 				window.IframeV2.init(
 					iframeConfig,
 					bearerToken,
 					callbacks,
 					null,
-					cc_endpoint
+					window.bluefinPlugin.cc_endpoint
 				);
-			}
-		}, 1111 );
-	} else {
-		const iframe_container = document.getElementById(
-			'bluefin-payment-gateway-iframe-container'
-		);
+		} else if(!isEditing && !same_customer_data) {
+		
+			;(async function() {
+				await createAndInjectBluefinIframe({
+					cartData,
+					customerData,
+					total_price,
+					currency_minor_unit,
+					currency_code,
+					iframeConfig,
+					callbacks,
+				})
+			})();
+		}
+		/* else if(isEditing) {
+			const bearerToken = bluefin_component.bearerToken;
 
-		console.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
+			bearerToken &&
+				window.bluefinPlugin &&
+				window.IframeV2.init(
+					iframeConfig,
+					bearerToken,
+					callbacks,
+					null,
+					window.bluefinPlugin.cc_endpoint
+				);
+		} */
 
-		// NOTE: Prevent injecting the same iframe twice or more and start clean.
-		iframe_container && ( iframe_container.innerHTML = '' );
 
-		// Still problems with same messages doubling up.
-		// TODO: Should be fixed by the 06.2025 release. Check in then
-		// getEventListeners
-
-		const bearerToken = bluefin_component.bearerToken;
-
-		bearerToken &&
-			window.bluefinPlugin &&
-			window.IframeV2.init(
-				iframeConfig,
-				bearerToken,
-				callbacks,
-				null,
-				window.bluefinPlugin.cc_endpoint
-			);
 	}
 
 	// settings.description
 	return <div id="bluefin-payment-gateway-iframe-container"></div>;
 };
 
+/*
+const BluefinIframe = memo( function BluefinIframe (props) {
+
+	useEffect(() => {
+		console.debug('props:', props)
+		console.debug('BluefinIframe useEffect', window.bluefinPlugin)
+	}, [])
+	
+	console.debug('BluefinIframe', props)
+	
+	// dispatch( checkoutStore ).setEditingBillingAddress(true);
+	
+	
+	return <div id="bluefin-payment-gateway-iframe-container"></div>
+} )
+
+const BluefinCheckout = (props) => {
+	const checkout_store = select( checkoutStore )
+	
+	console.debug('BluefinCheckout')
+	
+	
+	let _editing = checkout_store.getEditingBillingAddress()
+	
+	
+	
+	const { isEditingShippingAddress, isEditingBillingAddress } = useSelect(
+		( select ) => {
+			const store = select( CHECKOUT_STORE_KEY );
+			return {
+				// Default to true if the getter function doesn't exist
+				isEditingShippingAddress: store.getEditingShippingAddress
+					? store.getEditingShippingAddress()
+					: true,
+				isEditingBillingAddress: store.getEditingBillingAddress
+					? store.getEditingBillingAddress()
+					: true,
+			};
+		},
+		[]
+	);
+	
+	
+	// Get dispatch functions to update address editing states
+	const { setEditingShippingAddress, setEditingBillingAddress } =
+		useDispatch( CHECKOUT_STORE_KEY );
+
+	// Memoized function to update shipping address editing state
+	const setShippingAddressEditing = useCallback(
+		( isEditing ) => {
+			if ( typeof setEditingShippingAddress === 'function' ) {
+				setEditingShippingAddress( isEditing );
+			}
+		},
+		[ setEditingShippingAddress ]
+	);
+
+	// Memoized function to update billing address editing state
+	const setBillingAddressEditing = useCallback(
+		( isEditing ) => {
+			if ( typeof setEditingBillingAddress === 'function' ) {
+				setEditingBillingAddress( isEditing );
+			}
+		},
+		[ setEditingBillingAddress ]
+	);
+	
+
+	return <BluefinIframe
+		props = {
+			_editing
+		}
+		/>
+}
+
+*/
 
 
-( async function () {
+// For development
+bluefin_component.closeEditing = function() { 
+/*
+	const { setEditingShippingAddress, setEditingBillingAddress } =
+		useDispatch( CHECKOUT_STORE_KEY );
+
+	// Memoized function to update shipping address editing state
+	const setShippingAddressEditing = useCallback(
+		( isEditing ) => {
+			if ( typeof setEditingShippingAddress === 'function' ) {
+				setEditingShippingAddress( isEditing );
+			}
+		},
+		[ setEditingShippingAddress ]
+	);
+
+	// Memoized function to update billing address editing state
+	const setBillingAddressEditing = useCallback(
+		( isEditing ) => {
+			if ( typeof setEditingBillingAddress === 'function' ) {
+				setEditingBillingAddress( isEditing );
+			}
+		},
+		[ setEditingBillingAddress ]
+	);
+	
+	setBillingAddressEditing(false);
+	*/
+	
+	
+	dispatch( checkoutStore ).setEditingBillingAddress(false);
+
+}
+
+
+
+
+;( async function () {
 	const BluefinPaymentMethod = {
 		name: PAYMENT_METHOD_NAME,
 		label: <Label />,
-		content: <Content onClick = {function() { dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress"); }} />,
-		edit: <Content />,
+		content: <BluefinCheckout onClick = {function() { dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress"); }} />,
+		edit: <BluefinCheckout />,
 		canMakePayment,
 		ariaLabel: label,
 		// placeOrderButtonLabel: '',
