@@ -22,7 +22,12 @@ import {
 	CART_STORE_KEY,
 } from '@woocommerce/block-data';
 
-import { useEffect, memo, useCallback } from '@wordpress/element';
+import {
+	useRef,
+	useEffect,
+	memo,
+	useCallback
+} from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -57,19 +62,40 @@ class Input {
 
 const Label = ( props ) => {
 	const { PaymentMethodLabel } = props.components;
+	
+	const divRef = useRef(null);
+	
+	
+	useEffect(() => {
+		if(divRef.current) {
+			const id = setInterval(() => {
+				if(divRef.current && divRef.current.parentNode) {
+					clearInterval(id)
+					
+					console.log(divRef.current.parentNode.parentNode.parentNode.parentNode)
+					
+					divRef.current.parentNode.parentNode.parentNode.addEventListener('click', function() {
+						bluefin_component.closeEditing()
+					})
+				}
+			}, 555)
+		}
+	}, [])
 
 	return (
-		<PaymentMethodLabel
-			icon={
-				<img
-					className="wc-block-components-payment-method-icon"
-					src={ settings.icon }
-					width="300"
-					height="300"
-				/>
-			}
-			text={ 'Payment Gateway' }
-		/>
+		<div ref = { divRef }>
+			<PaymentMethodLabel	
+				icon={
+					<img
+						className="wc-block-components-payment-method-icon"
+						src={ settings.icon }
+						width="300"
+						height="300"
+					/>
+				}
+				text={ 'Payment Gateway' }
+			/>
+		</div>
 	);
 
 	/*return (
@@ -604,6 +630,7 @@ const BluefinCheckout = ( props ) => {
 				})
 			})();
 		}
+		// NOTE: fall through otherwise, which returns the payment label only given that we do (iframe_container.innerHTML = ''). Plus, the `return <div id="iframe_container>`.
 		/* else if(isEditing) {
 			const bearerToken = bluefin_component.bearerToken;
 
@@ -744,7 +771,7 @@ bluefin_component.closeEditing = function() {
 	const BluefinPaymentMethod = {
 		name: PAYMENT_METHOD_NAME,
 		label: <Label />,
-		content: <BluefinCheckout onClick = {function() { dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress"); }} />,
+		content: <BluefinCheckout />,
 		edit: <BluefinCheckout />,
 		canMakePayment,
 		ariaLabel: label,
