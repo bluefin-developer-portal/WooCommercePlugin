@@ -334,12 +334,6 @@ async function createAndInjectBluefinIframe(context) {
 
 		console.debug( 'fetching bearer_body:', bearer_body );
 		
-		document.querySelector(
-		'#bluefin-payment-gateway-iframe-container').addEventListener('click', function()
-			{
-				dispatch( checkoutStore ).setEditingBillingAddress(false);console.log("EditingBillingAddress");
-			})
-		
 		// Request Bearer Token
 		resp = await fetch( generate_bearer_token_url, {
 			method: 'POST',
@@ -383,7 +377,6 @@ async function createAndInjectBluefinIframe(context) {
 	
 	const transactionId = data.iframe_instance_resp.transactionId;
 	
-	
 
 	bluefin_component.bearerToken = bearerToken;
 
@@ -398,8 +391,21 @@ async function createAndInjectBluefinIframe(context) {
 	);
 }
 
+/*
+if(!window._domloaded) {
+document.addEventListener("DOMContentLoaded", function() {
+	console.log("DOMContentLoadedd", JSON.stringify(window.getCustomerData()));
+})
+window._domloaded = true
+}
+*/
+
 const BluefinCheckout = ( props ) => {
-	const customerData = select( CART_STORE_KEY ).getCustomerData();
+	const customerData = useSelect( ( select ) =>
+		select( CART_STORE_KEY ).getCustomerData()
+	);
+	
+	// const customerData = select( CART_STORE_KEY ).getCustomerData();
 	const cartData = select( CART_STORE_KEY ).getCartData();
 	const cardTotals = select( CART_STORE_KEY ).getCartTotals();
 
@@ -442,7 +448,14 @@ const BluefinCheckout = ( props ) => {
 	
 	const customerDataAsString = () => JSON.stringify(customerData)
 	
-	const sameCustomerData = () => customerDataAsString() == bluefin_component.customerData
+	const sameCustomerData = () => { 
+		// console.debug(customerDataAsString(), bluefin_component.customerData);
+		return bluefin_component.customerData != null && customerDataAsString() == bluefin_component.customerData
+	}
+	
+	// for dev
+	window.getCustomerData = () => customerData
+	
 	
 	// console.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
 	
@@ -496,7 +509,7 @@ const BluefinCheckout = ( props ) => {
 
 	// console.debug('componets: ', props.components.ValidationInputError('AAA') )
 
-	console.debug( 'Content props:', props, cardTotals, );
+	console.debug( 'Content props:', props, cardTotals, store );
 	
 	console.debug('customerDataAsString:', customerDataAsString())
 
@@ -509,6 +522,24 @@ const BluefinCheckout = ( props ) => {
 	console.debug( 'paymentStatus:', props.paymentStatus );
 
 	console.debug( 'emitResponse:', emitResponse );
+	
+	/*
+	useEffect(() => {
+		setTimeout(()=>{
+			console.log('useEffect:', JSON.stringify(window.getCustomerData()))
+		}, 5555)
+	}, [])
+	*/
+	
+	if(isEditing) {
+		const iframe_container = document.querySelector(
+			'#bluefin-payment-gateway-iframe-container'
+		);
+		
+		iframe_container && ( iframe_container.innerHTML = '' );
+		
+		return <div id="bluefin-payment-gateway-iframe-container"></div>;
+	}
 
 	const callbacks = {
 		iframeLoaded( ...args ) {
@@ -565,8 +596,6 @@ const BluefinCheckout = ( props ) => {
 				window.bluefinPlugin
 			) {
 				clearInterval( init_iframe_id );
-				
-				if(isEditing) return
 				
 				await createAndInjectBluefinIframe({
 					cartData,
@@ -628,9 +657,29 @@ const BluefinCheckout = ( props ) => {
 					iframeConfig,
 					callbacks,
 				})
+				
+
+	
+	
 			})();
+			
+			// If shipping same as billing address
+			/*
+			const {
+				setShippingAddress: setShippingAddressDispatch,
+				setBillingAddress: setBillingAddressDispatch,
+			} = useDispatch( 'wc/store/cart' );
+			
+			let _billingAddress = { ... customerData.billingAddress }
+			delete _billingAddress['email']
+			
+			bluefin_component.customerData = JSON.stringify({...customerData, shippingAddress: _billingAddress})
+					setShippingAddressDispatch(_billingAddress)
+			*/
+					
+					
 		}
-		// NOTE: fall through otherwise, which returns the payment label only given that we do (iframe_container.innerHTML = ''). Plus, the `return <div id="iframe_container>`.
+		// NOTE: fall through otherwise, which returns the payment label only given that we do (iframe_container.innerHTML = '')
 		/* else if(isEditing) {
 			const bearerToken = bluefin_component.bearerToken;
 
