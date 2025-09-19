@@ -4,6 +4,8 @@ jQuery( function ( $ ) {
 		const capture_button = document.querySelector(
 			'#bluefin_capture_button'
 		);
+		
+		// TODO: WooCommerce Store -> WooCommerce Plugin
 
 		const { search } = window.location;
 		
