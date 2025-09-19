@@ -612,7 +612,7 @@ const BluefinCheckout = ( props ) => {
 				})
 				
 			}
-		}, 1111 );
+		}, 555 );
 		
 	} else {
 		const iframe_container = document.querySelector(
