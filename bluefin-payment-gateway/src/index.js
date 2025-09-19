@@ -586,7 +586,7 @@ const BluefinCheckout = ( props ) => {
 		},
 	}
 
-  // TODO: Replace with useEffect
+  	// TODO: Replace with useEffect?
 	if ( ! bluefin_component.loaded ) {
 		bluefin_component.loaded = true;
 		
