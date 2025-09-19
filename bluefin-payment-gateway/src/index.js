@@ -308,6 +308,8 @@ async function createAndInjectBluefinIframe(context) {
 	// NOTE: Transaction ID has already been used
 	iframe_container && ( iframe_container.innerHTML = '' );
 	
+	bluefin_component.customerData = JSON.stringify(customerData)
+	
 	try {
 		const bearer_body = {};
 		
@@ -370,9 +372,6 @@ async function createAndInjectBluefinIframe(context) {
 	} catch ( err ) {
 		alert( err );
 	}
-	
-	
-	bluefin_component.customerData = JSON.stringify(customerData)
 
 	const bearerToken = data.iframe_instance_resp.bearerToken;
 	
