@@ -588,9 +588,10 @@ const BluefinCheckout = ( props ) => {
 
   	// TODO: Replace with useEffect?
 	if ( ! bluefin_component.loaded ) {
+		bluefin_component.customerData = JSON.stringify(customerData)
+		
 		bluefin_component.loaded = true;
 		
-		bluefin_component.customerData = JSON.stringify(customerData)
 
 		const init_iframe_id = setInterval( async () => {
 			if (
