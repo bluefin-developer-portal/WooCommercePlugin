@@ -6,6 +6,13 @@ jQuery( function ( $ ) {
 		);
 
 		const { search } = window.location;
+		
+		const setting_iframe_width = document.querySelector('[name="woocommerce_bluefin_gateway_iframe_width"]')
+		
+		const setting_iframe_height = document.querySelector('[name="woocommerce_bluefin_gateway_iframe_height"]')
+		
+		setting_iframe_width && (setting_iframe_width.disabled = true)
+		setting_iframe_height && (setting_iframe_height.disabled = true)
 
 		const add_capture =
 			typeof search === 'string' &&
