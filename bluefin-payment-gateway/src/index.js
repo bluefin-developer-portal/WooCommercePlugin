@@ -647,21 +647,15 @@ const BluefinCheckout = ( props ) => {
 				);
 		} else if(!isEditing && !same_customer_data) {
 		
-			;(async function() {
-				await createAndInjectBluefinIframe({
-					cartData,
-					customerData,
-					total_price,
-					currency_minor_unit,
-					currency_code,
-					iframeConfig,
-					callbacks,
-				})
-				
-
-	
-	
-			})();
+			createAndInjectBluefinIframe({
+				cartData,
+				customerData,
+				total_price,
+				currency_minor_unit,
+				currency_code,
+				iframeConfig,
+				callbacks,
+			})
 			
 			// If shipping same as billing address
 			/*
