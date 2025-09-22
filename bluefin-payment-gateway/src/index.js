@@ -3,8 +3,6 @@
  */
 import { registerPaymentMethod } from '@woocommerce/blocks-registry';
 
-// import BlocksRegistry from '@woocommerce/blocks-registry';
-
 import { __ } from '@wordpress/i18n';
 import { getPaymentMethodData } from '@woocommerce/settings';
 import { decodeEntities } from '@wordpress/html-entities';
@@ -12,7 +10,12 @@ import { decodeEntities } from '@wordpress/html-entities';
 
 // import { RawHTML } from '@wordpress/element';
 
-import { dispatch, select, useSelect, useDispatch } from '@wordpress/data';
+import {
+	dispatch,
+	select,
+	useSelect,
+	// useDispatch
+} from '@wordpress/data';
 
 import {
 	paymentStore,
@@ -22,7 +25,12 @@ import {
 	CART_STORE_KEY,
 } from '@woocommerce/block-data';
 
-import { useRef, useEffect, memo, useCallback } from '@wordpress/element';
+import {
+	useRef,
+	useEffect,
+	// memo,
+	// useCallback
+} from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -39,6 +47,9 @@ const bluefin_component = ( window.bluefin_component =
 	window.bluefin_component || {} );
 
 window.bluefin_component.request = window.bluefin_component.request || {};
+
+
+const alert = window.alert
 
 function isDigit( c ) {
 	return c >= '0' && c <= '9';
@@ -109,7 +120,7 @@ const Label = ( props ) => {
 		);*/
 };
 
-const canMakePayment = ( props ) => {
+const canMakePayment = () => {
 	return true;
 };
 
@@ -271,7 +282,7 @@ function get_total( total_price, currency_minor_unit ) {
 
 	const minor_unit = parseInt( currency_minor_unit );
 
-	if ( minor_unit != NaN ) {
+	if ( minor_unit >= 0 ) {
 		total = total / Math.pow( 10, minor_unit );
 	}
 
@@ -397,7 +408,7 @@ const BluefinCheckout = ( props ) => {
 
 	const store = select( cartStore );
 
-	const checkout_store = select( checkoutStore );
+	// const checkout_store = select( checkoutStore );
 
 	const { isEditingShippingAddress, isEditingBillingAddress } = useSelect(
 		( select ) => {
