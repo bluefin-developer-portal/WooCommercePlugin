@@ -255,8 +255,6 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		);
 	}
 
-
-
 	public function update_options() {
 		foreach ( $this->form_fields as $key => $value ) {
 			$this->update_option( $key, $this->get_option( $key ) );
