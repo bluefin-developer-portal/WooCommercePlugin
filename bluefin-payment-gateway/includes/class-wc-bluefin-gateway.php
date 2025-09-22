@@ -331,7 +331,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 				// Full Refund
 				// $order->update_status( OrderStatus::REFUNDED, sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) ) );
 				$order->add_order_note(
-					sprintf( __( 'Transaction Refunded via Bluefin', 'bluefin-payment-gateway' ) )
+					sprintf( __( 'Transaction Fully Refunded via Bluefin', 'bluefin-payment-gateway' ) )
 				);
 			}
 
