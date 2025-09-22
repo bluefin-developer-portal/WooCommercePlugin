@@ -28,6 +28,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 	protected $iframe_config_id;
 
+	protected $use_three_d_secure;
+
 
 
 	public function __construct() {
@@ -77,6 +79,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		$this->use_sandbox             = 'yes' === $this->get_option( 'use_sandbox', 'yes' );
 		$this->iframe_config_id        = $this->get_option( 'iframe_config_id' );
 		$this->use_auth_only           = 'yes' === $this->get_option( 'use_auth_only', 'no' );
+
+		$this->use_three_d_secure	   = 'yes' === $this->get_option('use_three_d_secure', 'yes');
 
 		// WC_Bluefin_Logger::log('DEBUG: ' . $this->id . ' ' . $this->plugin_id);
 
@@ -134,7 +138,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 		WC_Bluefin_API::set_endpoint(
 			$this->use_sandbox ?
-			WC_Bluefin_Defaults::cert_env : WC_Bluefin_Defaults::prod_env
+				WC_Bluefin_Defaults::cert_env : WC_Bluefin_Defaults::prod_env
 		);
 
 		WC_Bluefin_API::set_iframe_config_id( $this->iframe_config_id );
@@ -142,8 +146,35 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 		// WC_Bluefin_Logger
 		WC_Bluefin_Logger::set_logger_enabled( $this->enable_logging );
+
+		$this->set_3ds_settings();
 	}
 
+	public function set_3ds_settings() {
+		$three_d_secure_entries = [
+			'three_d_secure_trans_type'  => 'transactionType',
+			'three_d_secure_delivery_time_frame' => 'deliveryTimeFrame',
+			'three_d_secure_challenge_indicator' => 'threeDSecureChallengeIndicator',
+			'three_d_secure_reorder_indicator' => 'reorderIndicator',
+			'three_d_secure_shipping_indicator' => 'shippingIndicator',
+		];
+
+		$mapped_settings = array();
+
+		WC_Bluefin_API::set_use_3ds($this->use_three_d_secure);
+
+		foreach ( $three_d_secure_entries as $option_name => $API_field ) {
+			$mapped_settings[$API_field] = $this->get_option( $option_name );
+		}
+
+		WC_Bluefin_API::set_3ds_settings($mapped_settings);
+
+
+
+	}
+
+
+	// MOVED TO THE ADMIN SCRIPTS
 	public function validate_account_id_field( $key, $value ) {
 		if ( empty( $value ) ) {
 			WC_Admin_Settings::add_error( __( 'Bluefin Account Identifier is required.', 'bluefin-payment-gateway' ) );
@@ -162,7 +193,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 	/*
 	public function process_admin_options(): bool {
-		$this->errors = [ 'AAA', ];
+		$this->errors = [ 'Admin Error', ];
 		return false;
 		return parent::process_admin_options();
 	}
@@ -179,9 +210,12 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		return ! $this->is_account_connected();
 	}
 
-
 	public function is_account_connected() {
-		return $this->get_option( 'account_id' ) != '';
+		return $this->get_option( 'account_id' ) != ''
+			&& $this->get_option( 'merchant_api_key_id' ) != ''
+			&& $this->get_option( 'merchant_api_key_secret' ) != ''
+			&& $this->get_option( 'iframe_config_id' ) != ''
+			&& $this->get_option( 'iframe_timeout' ) != '';
 	}
 
 	/*
@@ -206,6 +240,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 			[
 				'generate_bearer_token_url' => esc_url_raw( rest_url( 'wc_bluefin/v1/generate_bearer_token' ) ),
 				'cc_endpoint'               => $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
+				'iframe_timeout'				=> $this->get_option( 'iframe_timeout' ),
 				// 'current_customer_id'                => get_current_user_id(),
 				'nonce'                     => wp_create_nonce( 'wp_rest' ),
 			]

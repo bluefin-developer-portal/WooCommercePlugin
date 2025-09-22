@@ -18,6 +18,8 @@ class WC_Bluefin_API {
 
 	private static $use_sandbox = true;
 
+	private static $use_3ds = true;
+
 	private static $account_id = '';
 
 	private static $api_key_secret = '';
@@ -26,8 +28,20 @@ class WC_Bluefin_API {
 
 	private static $iframe_config_id = '';
 
-	private static $threeDSecureInitSettings = [];
+	private static $threeDSecureInitSettings = array();
 
+
+	public static function set_3ds_settings($threeDSecureInitSettings) {
+		self::$threeDSecureInitSettings = $threeDSecureInitSettings;
+	}
+
+	public static function set_use_3ds(bool $use_3ds) {
+		self::$use_3ds = $use_3ds;
+	}
+
+	public static function get_use_3ds() {
+		return self::$use_3ds;
+	}
 
 	public static function generate_headers() {
 		$headers = [];
@@ -129,19 +143,17 @@ class WC_Bluefin_API {
 		);
 
 		$iframe_init_config = [
-			'label'                    => 'my-instance-1',
+			'label'                    => 'my-instance-1', // TODO: Make it unique based on customer_id + something?
 			'amount'                   => $request_json['total_price'],
 			'customer'                 => $request_json['customer'],
+			'timeout'				   => $request_json['timeout'],
 			'bfTokenReferences'        => $tokens,
 			'initializeTransaction'    => true,
-			'threeDSecureInitSettings' => [
-				'transactionType'                => 'GOODS_SERVICE_PURCHASE',
-				'deliveryTimeFrame'              => 'ELECTRONIC_DELIVERY',
-				'threeDSecureChallengeIndicator' => 'NO_PREFERENCE',
-				'reorderIndicator'               => 'FIRST_TIME_ORDERED',
-				'shippingIndicator'              => 'DIGITAL_GOODS',
-			],
 		];
+
+		if(self::get_use_3ds()) {
+			$iframe_init_config['threeDSecureInitSettings'] = self::$threeDSecureInitSettings;
+		}
 
 		if ( isset( $request_json['shippingaddress'] ) ) {
 			$iframe_init_config['shippingAddress'] = $request_json['shippingaddress'];

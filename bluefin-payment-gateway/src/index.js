@@ -40,7 +40,7 @@ const settings = getPaymentMethodData( PAYMENT_METHOD_NAME, {} );
 const defaultLabel = __( 'Bluefin Payment Gateway', 'woocommerce' );
 const label = decodeEntities( settings?.title || '' ) || defaultLabel;
 
-window.bluefin_component = window.bluefin_component || {};
+const bluefin_component = window.bluefin_component = window.bluefin_component || {};
 
 window.bluefin_component.request = window.bluefin_component.request || {};
 
@@ -334,6 +334,7 @@ async function createAndInjectBluefinIframe(context) {
 
 		bearer_body.total_price = get_total(total_price, currency_minor_unit);
 		bearer_body.currency = currency_code;
+		bearer_body.timeout = bluefin_component.current_timeout;
 
 		console.debug( 'fetching bearer_body:', bearer_body );
 		
@@ -543,6 +544,28 @@ const BluefinCheckout = ( props ) => {
 		iframe_container && ( iframe_container.innerHTML = '' );
 		
 		return <div id="bluefin-payment-gateway-iframe-container"></div>;
+	}
+
+	// Calculate current iframe timeout
+	{
+		if (!bluefin_component.iframe_session) {
+			bluefin_component.iframe_session = {
+				start: Date.now()
+			}
+		}
+
+		bluefin_component.iframe_session.passed = Date.now() - bluefin_component.iframe_session.start;
+
+		let passed = parseInt(bluefin_component.iframe_session.passed / 1000)
+
+		let timeout = parseInt(window.bluefinPlugin.iframe_timeout) - passed;
+
+		bluefin_component.current_timeout = timeout;
+
+		if (timeout <= 0) {
+			alert("Bluefin Iframe Payment Session Expired. Please, refresh the page and try again.")
+			return
+		}
 	}
 
 	const callbacks = {
