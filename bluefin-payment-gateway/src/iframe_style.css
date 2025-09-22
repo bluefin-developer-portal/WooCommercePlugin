@@ -1,0 +1,20 @@
+@media screen and (width >= 1024px) {
+	#bluefin-payment-gateway-iframe-container iframe {
+		width: 30em;
+    		height: 600px;
+	}
+}
+
+@media screen and (width <= 1024px) and (width > 780px) {
+	#bluefin-payment-gateway-iframe-container iframe {
+		width: 23em;
+    		height: 600px;
+	}
+}
+
+@media screen and (width <= 780px) {
+	#bluefin-payment-gateway-iframe-container iframe {
+		width: 26em;
+    		height: 600px;
+	}
+}

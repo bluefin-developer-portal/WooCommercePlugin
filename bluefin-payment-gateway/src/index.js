@@ -289,8 +289,11 @@ async function createAndInjectBluefinIframe( context ) {
 		callbacks,
 	} = context;
 
-	const { cc_endpoint, generate_bearer_token_url, nonce } =
-		window.bluefinPlugin;
+	const {
+		cc_endpoint,
+		generate_bearer_token_url,
+		nonce
+	} = window.bluefinPlugin;
 
 	let resp = null,
 		data = null;
@@ -498,8 +501,8 @@ const BluefinCheckout = ( props ) => {
 
 	const iframeConfig = {
 		parentDivId: 'bluefin-payment-gateway-iframe-container',
-		width: '700px',
-		height: '500px',
+		// width: '700px',
+		// height: '300px',
 	};
 
 	console.debug( 'paymentStatus:', props.paymentStatus );

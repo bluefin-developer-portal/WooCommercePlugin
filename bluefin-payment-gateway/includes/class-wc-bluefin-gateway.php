@@ -29,6 +29,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 	protected $iframe_config_id;
 
 	protected $use_three_d_secure;
+	
+	protected $iframe_responsive;
 
 
 
@@ -80,6 +82,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		$this->iframe_config_id        = $this->get_option( 'iframe_config_id' );
 		$this->use_auth_only           = 'yes' === $this->get_option( 'use_auth_only', 'no' );
 
+		$this->iframe_responsive = 'yes' === $this->get_option( 'iframe_responsive', 'yes' );
+		
 		$this->use_three_d_secure = 'yes' === $this->get_option( 'use_three_d_secure', 'yes' );
 
 		// WC_Bluefin_Logger::log('DEBUG: ' . $this->id . ' ' . $this->plugin_id);
@@ -114,7 +118,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 			return true;
 		}
 
-		// TODO: TBD: DO THIS BUT MAKE YOUR OWN REFUND
+		// TBD: DO THIS BUT MAKE YOUR OWN REFUND
 		add_filter( 'woocommerce_admin_order_should_render_refunds', 'should_refund');
 
 		*/
@@ -128,6 +132,17 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		});
 
 		*/
+	}
+	
+	public function get_option($key, $default = '') {
+		// NOTE: "default" issue/bug in some cases
+		$option_value = parent::get_option($key, $default);
+		
+		if($option_value == 'default') {
+			return $default;
+		}
+		
+		return $option_value;
 	}
 
 	public function setup_static_API() {
@@ -154,11 +169,11 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 	public function set_3ds_settings() {
 		$three_d_secure_entries = [
-			'three_d_secure_trans_type'          => 'transactionType',
-			'three_d_secure_delivery_time_frame' => 'deliveryTimeFrame',
-			'three_d_secure_challenge_indicator' => 'threeDSecureChallengeIndicator',
-			'three_d_secure_reorder_indicator'   => 'reorderIndicator',
-			'three_d_secure_shipping_indicator'  => 'shippingIndicator',
+			'three_d_secure_trans_type'          => [ 'transactionType', 'GOODS_SERVICE_PURCHASE' ],
+			'three_d_secure_delivery_time_frame' => [ 'deliveryTimeFrame', 'ELECTRONIC_DELIVERY' ],
+			'three_d_secure_challenge_indicator' => [ 'threeDSecureChallengeIndicator', 'NO_PREFERENCE' ],
+			'three_d_secure_reorder_indicator'   => [ 'reorderIndicator', 'FIRST_TIME_ORDERED' ],
+			'three_d_secure_shipping_indicator'  => [ 'shippingIndicator', 'BILLING_ADDRESS' ],
 		];
 
 		$mapped_settings = [];
@@ -166,8 +181,11 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		WC_Bluefin_API::set_use_3ds( $this->use_three_d_secure );
 
 		foreach ( $three_d_secure_entries as $option_name => $API_field ) {
-			$mapped_settings[ $API_field ] = $this->get_option( $option_name );
+			// 0: field_name, 1: default value
+			$mapped_settings[ $API_field[0] ] = $this->get_option( $option_name, $API_field[1] );
 		}
+
+		WC_Bluefin_Logger::log( 'set_3ds_settings:' . json_encode( $mapped_settings ) );
 
 		WC_Bluefin_API::set_3ds_settings( $mapped_settings );
 	}
@@ -190,22 +208,6 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		}
 			return $value;
 	}
-
-	/*
-	// TODO: Required fields for the admin options validation
-	public function get_required_settings_keys() {
-		return [ 'account_id', 'merchant_api_key_id' ];
-	}
-	*/
-
-
-	/*
-	public function process_admin_options(): bool {
-		$this->errors = [ 'Admin Error', ];
-		return false;
-		return parent::process_admin_options();
-	}
-	*/
 
 
 	public function is_available() {
@@ -253,6 +255,10 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 				'nonce'                     => wp_create_nonce( 'wp_rest' ),
 			]
 		);
+
+		if($this->iframe_responsive) {
+			wp_enqueue_style( 'bluefin-plugin-style', plugins_url( 'assets/iframe_style.css', WC_BLUEFIN_MAIN_FILE ), [], '1.0.0', 'all' );
+		}
 	}
 
 	public function update_options() {
