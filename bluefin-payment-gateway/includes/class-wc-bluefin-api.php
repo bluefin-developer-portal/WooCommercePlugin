@@ -30,6 +30,10 @@ class WC_Bluefin_API {
 
 	private static $threeDSecureInitSettings = [];
 
+	public static $use_card_payment            = true;
+	public static $use_google_pay              = true;
+	public static $use_mastercard_click_to_pay = true;
+
 
 	public static function set_3ds_settings( $threeDSecureInitSettings ) {
 		self::$threeDSecureInitSettings = $threeDSecureInitSettings;
@@ -150,6 +154,20 @@ class WC_Bluefin_API {
 			'bfTokenReferences'     => $tokens,
 			'initializeTransaction' => true,
 		];
+
+		$allowed_payment_methods = [];
+
+		if ( self::$use_card_payment ) {
+			array_push( $allowed_payment_methods, 'CARD' );
+		}
+		if ( self::$use_google_pay ) {
+			array_push( $allowed_payment_methods, 'GOOGLE_PAY' );
+		}
+		if ( self::$use_mastercard_click_to_pay ) {
+			array_push( $allowed_payment_methods, 'CLICK_TO_PAY' );
+		}
+
+		$iframe_init_config['allowedPaymentMethods'] = $allowed_payment_methods;
 
 		if ( self::get_use_3ds() ) {
 			$iframe_init_config['threeDSecureInitSettings'] = self::$threeDSecureInitSettings;

@@ -148,6 +148,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		WC_Bluefin_Logger::set_logger_enabled( $this->enable_logging );
 
 		$this->set_3ds_settings();
+
+		$this->set_iframe_settings();
 	}
 
 	public function set_3ds_settings() {
@@ -168,6 +170,15 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		}
 
 		WC_Bluefin_API::set_3ds_settings( $mapped_settings );
+	}
+
+	public function set_iframe_settings() {
+		WC_Bluefin_API::$use_card_payment            =
+			'yes' === $this->get_option( 'use_card_payment', 'yes' );
+		WC_Bluefin_API::$use_google_pay              =
+			'yes' === $this->get_option( 'use_google_pay', 'yes' );
+		WC_Bluefin_API::$use_mastercard_click_to_pay =
+			'yes' === $this->get_option( 'use_mastercard_click_to_pay', 'yes' );
 	}
 
 
