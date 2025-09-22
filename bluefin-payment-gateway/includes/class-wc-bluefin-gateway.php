@@ -29,7 +29,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 	protected $iframe_config_id;
 
 	protected $use_three_d_secure;
-	
+
 	protected $iframe_responsive;
 
 
@@ -83,7 +83,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		$this->use_auth_only           = 'yes' === $this->get_option( 'use_auth_only', 'no' );
 
 		$this->iframe_responsive = 'yes' === $this->get_option( 'iframe_responsive', 'yes' );
-		
+
 		$this->use_three_d_secure = 'yes' === $this->get_option( 'use_three_d_secure', 'yes' );
 
 		// WC_Bluefin_Logger::log('DEBUG: ' . $this->id . ' ' . $this->plugin_id);
@@ -133,15 +133,15 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 		*/
 	}
-	
-	public function get_option($key, $default = '') {
+
+	public function get_option( $key, $default = '' ) {
 		// NOTE: "default" issue/bug in some cases
-		$option_value = parent::get_option($key, $default);
-		
-		if($option_value == 'default') {
+		$option_value = parent::get_option( $key, $default );
+
+		if ( $option_value == 'default' ) {
 			return $default;
 		}
-		
+
 		return $option_value;
 	}
 
@@ -244,21 +244,26 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 		wp_enqueue_script( 'bluefin-sdk', WC_Bluefin_Defaults::script_path, [ 'wp-element' ], null, true );
 
+		$bluefin_plugin = [
+			'generate_bearer_token_url' => esc_url_raw( rest_url( 'wc_bluefin/v1/generate_bearer_token' ) ),
+			'cc_endpoint'               => $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
+			'iframe_timeout'            => $this->get_option( 'iframe_timeout' ),
+			// 'current_customer_id'                => get_current_user_id(),
+			'nonce'                     => wp_create_nonce( 'wp_rest' ),
+		];
+
+		if ( $this->iframe_responsive ) {
+			wp_enqueue_style( 'bluefin-plugin-style', plugins_url( 'assets/iframe_style.css', WC_BLUEFIN_MAIN_FILE ), [], null, 'all' );
+		} else {
+			$bluefin_plugin['iframe_width']  = $this->get_option( 'iframe_width', '700px' );
+			$bluefin_plugin['iframe_height'] = $this->get_option( 'iframe_height', '600px' );
+		}
+
 		wp_localize_script(
 			'bluefin-plugin',
 			'bluefinPlugin',
-			[
-				'generate_bearer_token_url' => esc_url_raw( rest_url( 'wc_bluefin/v1/generate_bearer_token' ) ),
-				'cc_endpoint'               => $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
-				'iframe_timeout'            => $this->get_option( 'iframe_timeout' ),
-				// 'current_customer_id'                => get_current_user_id(),
-				'nonce'                     => wp_create_nonce( 'wp_rest' ),
-			]
+			$bluefin_plugin,
 		);
-
-		if($this->iframe_responsive) {
-			wp_enqueue_style( 'bluefin-plugin-style', plugins_url( 'assets/iframe_style.css', WC_BLUEFIN_MAIN_FILE ), [], '1.0.0', 'all' );
-		}
 	}
 
 	public function update_options() {

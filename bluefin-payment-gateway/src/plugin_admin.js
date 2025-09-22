@@ -1,3 +1,5 @@
+const jQuery = window.jQuery;
+
 jQuery( function ( $ ) {
 	// document.addEventListener("DOMContentLoaded", function (event) {
 	$( document ).ready( function () {
@@ -18,12 +20,12 @@ jQuery( function ( $ ) {
 
 		if ( settings_page_open ) {
 			const required = [
-				// TODO: { name: 'account_id', regex: '', ...}
-				'account_id',
-				'merchant_api_key_id',
-				'merchant_api_key_secret',
-				'iframe_config_id',
-				'iframe_timeout',
+				// TODO: { regex: '', ...}
+				{ name: 'account_id', validate: () => true },
+				{ name: 'merchant_api_key_id', validate: () => true },
+				{ name: 'merchant_api_key_secret', validate: () => true },
+				{ name: 'iframe_config_id', validate: () => true },
+				{ name: 'iframe_timeout', validate: () => true },
 			];
 
 			const settings = {};
@@ -40,19 +42,35 @@ jQuery( function ( $ ) {
 				return dom;
 			}
 
+			const settings_iframe_responsive =
+				getOptionDom( 'iframe_responsive' );
 			const setting_iframe_width = getOptionDom( 'iframe_width' );
 			const setting_iframe_height = getOptionDom( 'iframe_height' );
 
+			required.push( {
+				name: 'iframe_width',
+				validate: () => ! settings_iframe_responsive.checked,
+			} );
+			required.push( {
+				name: 'iframe_height',
+				validate: () => ! settings_iframe_responsive.checked,
+			} );
+
 			for ( const option of required ) {
-				getOptionDom( option, true );
+				getOptionDom( option.name, true );
 			}
 
-			// console.debug('settings:', settings)
-
-			setting_iframe_width && ( setting_iframe_width.disabled = true );
-			setting_iframe_height && ( setting_iframe_height.disabled = true );
+			console.debug( 'settings:', settings );
 
 			const save_button = document.querySelector( '[name="save"]' );
+
+			function enableSave() {
+				save_button.disabled = false;
+			}
+
+			function disableSave() {
+				save_button.disabled = true;
+			}
 
 			function validateOption( option_name, event ) {
 				console.debug( `${ option_name } input:`, event, [
@@ -66,21 +84,70 @@ jQuery( function ( $ ) {
 				if ( target.value == '' ) {
 					target.style.border = 'solid red 1px';
 
-					setTimeout( () => ( save_button.disabled = true ), 111 );
+					setTimeout( () => disableSave(), 111 );
 					// event.target.reportValidity();
 				} else {
 					target.style.border = null;
 					for ( const field of required ) {
-						if ( settings[ field ].value == '' ) {
-							save_button.disabled = true;
+						if (
+							field.validate() &&
+							settings[ field.name ].value == ''
+						) {
+							disableSave();
 							return;
 						}
 					}
-					save_button.disabled = false;
+					enableSave();
 				}
 			}
 
 			console.debug( 'save_button:', save_button );
+
+			if ( settings_iframe_responsive.checked ) {
+				setting_iframe_width &&
+					( setting_iframe_width.disabled = true );
+				setting_iframe_height &&
+					( setting_iframe_height.disabled = true );
+			}
+
+			function height_input( event ) {
+				validateOption( 'iframe_height', event );
+			}
+
+			function width_input( event ) {
+				validateOption( 'iframe_width', event );
+			}
+
+			settings_iframe_responsive.addEventListener(
+				'change',
+				function ( event ) {
+					const target = event.target;
+
+					if ( target.checked ) {
+						// reset
+						setting_iframe_width.disabled = true;
+						setting_iframe_height.disabled = true;
+						setting_iframe_width.value = '';
+						setting_iframe_height.value = '';
+
+						enableSave();
+					} else {
+						setting_iframe_width.disabled = false;
+						setting_iframe_height.disabled = false;
+						disableSave();
+
+						setting_iframe_width.addEventListener(
+							'input',
+							width_input
+						);
+
+						setting_iframe_height.addEventListener(
+							'input',
+							height_input
+						);
+					}
+				}
+			);
 
 			/*
 			settings.account_id.addEventListener('invalid', function(event) {

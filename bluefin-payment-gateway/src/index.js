@@ -289,11 +289,8 @@ async function createAndInjectBluefinIframe( context ) {
 		callbacks,
 	} = context;
 
-	const {
-		cc_endpoint,
-		generate_bearer_token_url,
-		nonce
-	} = window.bluefinPlugin;
+	const { cc_endpoint, generate_bearer_token_url, nonce } =
+		window.bluefinPlugin;
 
 	let resp = null,
 		data = null;
@@ -388,6 +385,8 @@ window._domloaded = true
 */
 
 const BluefinCheckout = ( props ) => {
+	const bluefinPlugin = window.bluefinPlugin;
+
 	const customerData = useSelect( ( select ) =>
 		select( CART_STORE_KEY ).getCustomerData()
 	);
@@ -525,6 +524,13 @@ const BluefinCheckout = ( props ) => {
 		iframe_container && ( iframe_container.innerHTML = '' );
 
 		return <div id="bluefin-payment-gateway-iframe-container"></div>;
+	}
+
+	if ( bluefinPlugin.iframe_width != null ) {
+		iframeConfig.width = bluefinPlugin.iframe_width;
+	}
+	if ( bluefinPlugin.iframe_height != null ) {
+		iframeConfig.height = bluefinPlugin.iframe_height;
 	}
 
 	// Calculate current iframe timeout
