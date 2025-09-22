@@ -36,27 +36,23 @@ $bluefin_settings = [
 		'title'       => __( 'Account Identifier', 'bluefin-payment-gateway' ),
 		'type'        => 'text',
 		'description' => __( 'Account Identifier', 'bluefin-payment-gateway' ),
-		'default'     => __( '', 'bluefin-payment-gateway' ),
 		// 'required'    => true,
 	],
 	'merchant_api_key_id'                => [
 		'title'       => __( 'Merchant API Key Identifier', 'bluefin-payment-gateway' ),
 		'type'        => 'text',
 		'description' => __( 'Merchant  API Key Identifier', 'bluefin-payment-gateway' ),
-		'default'     => __( '', 'bluefin-payment-gateway' ),
 	],
 	'merchant_api_key_secret'            => [
 		'title'       => __( 'Merchant API Key Secret', 'bluefin-payment-gateway' ),
 		'type'        => 'password',
 		'description' => __( 'Merchant  API Key Secret', 'bluefin-payment-gateway' ),
-		'default'     => __( '', 'bluefin-payment-gateway' ),
 		'desc_tip'    => true,
 	],
 	'iframe_config_id'                   => [
 		'title'       => __( 'iFrame Configuration Identifier', 'bluefin-payment-gateway' ),
 		'type'        => 'text',
 		'description' => __( 'iFrame Configuration used by the Checkout Component. Preconfigure payment methods and their settings', 'bluefin-payment-gateway' ),
-		'default'     => __( '', 'bluefin-payment-gateway' ),
 		'desc_tip'    => true,
 	],
 	'use_sandbox'                        => [
@@ -81,7 +77,6 @@ $bluefin_settings = [
 		'title'       => __( 'Responsive iframe', 'bluefin-payment-gateway' ),
 		'type'        => 'checkbox',
 		'description' => __( 'Enable responsive iframe that automatically adjusts height according to the screen', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'default'     => 'yes',
 		'desc_tip'    => true,
 	],
@@ -89,14 +84,12 @@ $bluefin_settings = [
 		'title'       => __( 'Iframe Width', 'bluefin-payment-gateway' ),
 		'type'        => 'text',
 		'description' => __( 'Width of the payment iframe (e.g., 100%, 500px, 50vw)', 'bluefin-payment-gateway' ),
-		'default'     => __( '', 'bluefin-payment-gateway' ),
 		'desc_tip'    => true,
 	],
 	'iframe_height'                      => [
 		'title'       => __( 'Iframe Height', 'bluefin-payment-gateway' ),
 		'type'        => 'text',
 		'description' => __( 'Height of the payment iframe (e.g., 600px, 60vh, 400px)', 'bluefin-payment-gateway' ),
-		'default'     => __( '', 'bluefin-payment-gateway' ),
 		'desc_tip'    => true,
 	],
 	'iframe_timeout'                     => [
@@ -110,8 +103,6 @@ $bluefin_settings = [
 	'use_card_payment'                   => [
 		'title'       => __( 'Credit/Debit Card', 'bluefin-payment-gateway' ),
 		'type'        => 'checkbox',
-		'description' => __( '', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'default'     => 'yes',
 		'desc_tip'    => false,
 	],
@@ -128,16 +119,12 @@ $bluefin_settings = [
 	'use_google_pay'                     => [
 		'title'       => __( 'Google Pay', 'bluefin-payment-gateway' ),
 		'type'        => 'checkbox',
-		'description' => __( '', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'default'     => 'yes',
 		'desc_tip'    => false,
 	],
 	'use_mastercard_click_to_pay'        => [
 		'title'       => __( 'Mastercard Click to Pay', 'bluefin-payment-gateway' ),
 		'type'        => 'checkbox',
-		'description' => __( '', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'default'     => 'yes',
 		'desc_tip'    => false,
 	],
@@ -155,7 +142,6 @@ $bluefin_settings = [
 
 	'three_d_secure_trans_type'          => [
 		'title'       => __( '3DS Transaction Type', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'type'        => 'select',
 		'description' => __( 'Each option provides context about the nature of the transaction, helping to ensure accurate processing and risk assessment.', 'bluefin-payment-gateway' ),
 		'default'     => 'GOODS_SERVICE_PURCHASE',
@@ -171,7 +157,6 @@ $bluefin_settings = [
 
 	'three_d_secure_delivery_time_frame' => [
 		'title'       => __( 'Delivery Time Frame', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'type'        => 'select',
 		'description' => __( 'As the setting name suggests, this is the time for the goods to be delivered. The descriptions are pretty much self-explanatory given the options.', 'bluefin-payment-gateway' ),
 		'default'     => 'ELECTRONIC_DELIVERY',
@@ -186,7 +171,6 @@ $bluefin_settings = [
 
 	'three_d_secure_challenge_indicator' => [
 		'title'       => __( '3D Secure Challenge Indicator', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'type'        => 'select',
 		'description' => __( 'Indicates whether a challenge is preferred, mandated, or requested for the transaction.', 'bluefin-payment-gateway' ),
 		'default'     => 'NO_PREFERENCE',
@@ -202,7 +186,6 @@ $bluefin_settings = [
 
 	'three_d_secure_reorder_indicator'   => [
 		'title'       => __( 'Reorder Indicator', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'type'        => 'select',
 		'description' => __( 'This setting indicates whether the order is new or was ordered before.', 'bluefin-payment-gateway' ),
 		'default'     => 'FIRST_TIME_ORDERED',
@@ -215,7 +198,6 @@ $bluefin_settings = [
 
 	'three_d_secure_shipping_indicator'  => [
 		'title'       => __( 'Shipping Indicator', 'bluefin-payment-gateway' ),
-		'label'       => __( '', 'bluefin-payment-gateway' ),
 		'type'        => 'select',
 		'description' => __( 'Specifies the type of Shipping', 'bluefin-payment-gateway' ),
 		'default'     => 'BILLING_ADDRESS',
