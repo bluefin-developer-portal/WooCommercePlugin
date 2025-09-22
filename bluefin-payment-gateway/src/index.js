@@ -22,12 +22,7 @@ import {
 	CART_STORE_KEY,
 } from '@woocommerce/block-data';
 
-import {
-	useRef,
-	useEffect,
-	memo,
-	useCallback
-} from '@wordpress/element';
+import { useRef, useEffect, memo, useCallback } from '@wordpress/element';
 
 /**
  * Internal dependencies
@@ -40,7 +35,8 @@ const settings = getPaymentMethodData( PAYMENT_METHOD_NAME, {} );
 const defaultLabel = __( 'Bluefin Payment Gateway', 'woocommerce' );
 const label = decodeEntities( settings?.title || '' ) || defaultLabel;
 
-const bluefin_component = window.bluefin_component = window.bluefin_component || {};
+const bluefin_component = ( window.bluefin_component =
+	window.bluefin_component || {} );
 
 window.bluefin_component.request = window.bluefin_component.request || {};
 
@@ -62,30 +58,36 @@ class Input {
 
 const Label = ( props ) => {
 	const { PaymentMethodLabel } = props.components;
-	
-	const divRef = useRef(null);
-	
-	
-	useEffect(() => {
-		if(divRef.current) {
-			const id = setInterval(() => {
-				if(divRef.current && divRef.current.parentNode) {
-					clearInterval(id)
-					
-					console.debug('Label UseEffect:', divRef.current.parentNode.parentNode.parentNode.parentNode)
-					
-					divRef.current.parentNode.parentNode.parentNode.addEventListener('click', function() {
-						// console.debug("Label Click")
-						bluefin_component.closeEditing()
-					})
+
+	const divRef = useRef( null );
+
+	useEffect( () => {
+		if ( divRef.current ) {
+			const id = setInterval( () => {
+				if ( divRef.current && divRef.current.parentNode ) {
+					clearInterval( id );
+
+					console.debug(
+						'Label UseEffect:',
+						divRef.current.parentNode.parentNode.parentNode
+							.parentNode
+					);
+
+					divRef.current.parentNode.parentNode.parentNode.addEventListener(
+						'click',
+						function () {
+							// console.debug("Label Click")
+							bluefin_component.closeEditing();
+						}
+					);
 				}
-			}, 555)
+			}, 555 );
 		}
-	}, [])
+	}, [] );
 
 	return (
-		<div ref = { divRef }>
-			<PaymentMethodLabel	
+		<div ref={ divRef }>
+			<PaymentMethodLabel
 				icon={
 					<img
 						className="wc-block-components-payment-method-icon"
@@ -111,7 +113,7 @@ const canMakePayment = ( props ) => {
 	return true;
 };
 
-function transformCustomerData(customerData) {
+function transformCustomerData( customerData ) {
 	/*
 	Bluefin API Schema:
 	"customer": {
@@ -224,16 +226,13 @@ function transformCustomerData(customerData) {
 	}
 
 	if ( customerData.billingAddress.email ) {
-		bfcustomerData.email =
-			customerData.billingAddress.email;
+		bfcustomerData.email = customerData.billingAddress.email;
 	}
 
 	if ( customerData.billingAddress.phone ) {
 		bfcustomerData.phone =
 			'+' +
-			Input.parseIntPhoneNumber(
-				customerData.billingAddress.phone
-			);
+			Input.parseIntPhoneNumber( customerData.billingAddress.phone );
 	}
 
 	for ( const field of shippingSchema ) {
@@ -259,27 +258,27 @@ function transformCustomerData(customerData) {
 			}
 		}
 	}
-	
+
 	return {
 		shippingAddressData,
 		billingAddressData,
-		bfcustomerData
-	}
+		bfcustomerData,
+	};
 }
 
-function get_total(total_price, currency_minor_unit) {
-	let total = parseInt(total_price)
-	
-	let minor_unit = parseInt(currency_minor_unit)
-	
-	if(minor_unit != NaN) {
-		total = total / Math.pow(10, minor_unit)
+function get_total( total_price, currency_minor_unit ) {
+	let total = parseInt( total_price );
+
+	const minor_unit = parseInt( currency_minor_unit );
+
+	if ( minor_unit != NaN ) {
+		total = total / Math.pow( 10, minor_unit );
 	}
-	
-	return total.toString()
+
+	return total.toString();
 }
 
-async function createAndInjectBluefinIframe(context) {
+async function createAndInjectBluefinIframe( context ) {
 	const {
 		cartData,
 		customerData,
@@ -288,42 +287,34 @@ async function createAndInjectBluefinIframe(context) {
 		currency_minor_unit,
 		iframeConfig,
 		callbacks,
-	} = context
+	} = context;
 
 	const { cc_endpoint, generate_bearer_token_url, nonce } =
 		window.bluefinPlugin;
-	
 
 	let resp = null,
 		data = null;
-		
-	
+
 	const iframe_container = document.querySelector(
 		'#bluefin-payment-gateway-iframe-container'
 	);
-	
+
 	// Still problems with same messages doubling up.
 	// TODO: Should be fixed by the 06.2025 release. Check in then
 	// getEventListeners
 	// NOTE: Prevent injecting the same iframe twice or more and start clean.
 	// NOTE: Transaction ID has already been used
 	iframe_container && ( iframe_container.innerHTML = '' );
-	
-	bluefin_component.customerData = JSON.stringify(customerData)
-	
+
+	bluefin_component.customerData = JSON.stringify( customerData );
+
 	try {
 		const bearer_body = {};
-		
-		const {
-			shippingAddressData,
-			billingAddressData,
-			bfcustomerData
-		} = transformCustomerData(customerData)
 
-		if (
-			cartData.needsShipping &&
-			customerData.shippingAddress
-		) {
+		const { shippingAddressData, billingAddressData, bfcustomerData } =
+			transformCustomerData( customerData );
+
+		if ( cartData.needsShipping && customerData.shippingAddress ) {
 			bearer_body.shippingaddress = shippingAddressData;
 		}
 
@@ -332,13 +323,12 @@ async function createAndInjectBluefinIframe(context) {
 			bearer_body.customer = bfcustomerData;
 		}
 
-		bearer_body.total_price = get_total(total_price, currency_minor_unit);
+		bearer_body.total_price = get_total( total_price, currency_minor_unit );
 		bearer_body.currency = currency_code;
 		bearer_body.timeout = bluefin_component.current_timeout;
 
 		console.debug( 'fetching bearer_body:', bearer_body );
-		
-		
+
 		// Request Bearer Token
 		resp = await fetch( generate_bearer_token_url, {
 			method: 'POST',
@@ -351,22 +341,15 @@ async function createAndInjectBluefinIframe(context) {
 		} );
 
 		if (
-			resp.headers
-				.get( 'content-type' )
-				.includes( 'application/json' )
+			resp.headers.get( 'content-type' ).includes( 'application/json' )
 		) {
 			data = await resp.json();
 		}
 
-		console.debug(
-			`res: ${ generate_bearer_token_url }`,
-			resp
-		);
+		console.debug( `res: ${ generate_bearer_token_url }`, resp );
 
 		if ( ! resp.ok ) {
-			const err = new Error(
-				'HTTP status code: ' + resp.status
-			);
+			const err = new Error( 'HTTP status code: ' + resp.status );
 			err.message = JSON.stringify( data );
 			err.status = resp.status;
 			throw err;
@@ -376,9 +359,8 @@ async function createAndInjectBluefinIframe(context) {
 	}
 
 	const bearerToken = data.iframe_instance_resp.bearerToken;
-	
+
 	const transactionId = data.iframe_instance_resp.transactionId;
-	
 
 	bluefin_component.bearerToken = bearerToken;
 
@@ -406,15 +388,15 @@ const BluefinCheckout = ( props ) => {
 	const customerData = useSelect( ( select ) =>
 		select( CART_STORE_KEY ).getCustomerData()
 	);
-	
+
 	// const customerData = select( CART_STORE_KEY ).getCustomerData();
 	const cartData = select( CART_STORE_KEY ).getCartData();
 	const cardTotals = select( CART_STORE_KEY ).getCartTotals();
 
 	const store = select( cartStore );
-	
-	const checkout_store = select( checkoutStore )
-	
+
+	const checkout_store = select( checkoutStore );
+
 	const { isEditingShippingAddress, isEditingBillingAddress } = useSelect(
 		( select ) => {
 			const store = select( CHECKOUT_STORE_KEY );
@@ -430,41 +412,37 @@ const BluefinCheckout = ( props ) => {
 		},
 		[]
 	);
-	
+
 	// console.debug('isCustomerDataUpdating:', store.isCustomerDataUpdating())
 
 	// NOTE: total_price including total_fees, total_tax, etc.
-	const {
-		currency_code,
-		total_price,
-		currency_minor_unit
-	} = cardTotals;
+	const { currency_code, total_price, currency_minor_unit } = cardTotals;
 
 	const { eventRegistration, emitResponse, onSubmit } = props;
 
 	const { onPaymentSetup, onCheckoutValidation } = eventRegistration;
-	
-	const isEditing = isEditingShippingAddress
-		|| isEditingBillingAddress
-	
-	
-	const customerDataAsString = () => JSON.stringify(customerData)
-	
-	const isScriptLoaded = () => window.bluefinPlugin != null
-	
-	const sameCustomerData = () => { 
+
+	const isEditing = isEditingShippingAddress || isEditingBillingAddress;
+
+	const customerDataAsString = () => JSON.stringify( customerData );
+
+	const isScriptLoaded = () => window.bluefinPlugin != null;
+
+	const sameCustomerData = () => {
 		// console.debug(customerDataAsString(), bluefin_component.customerData);
-		return bluefin_component.customerData != null && customerDataAsString() == bluefin_component.customerData
-	}
-	
+		return (
+			bluefin_component.customerData != null &&
+			customerDataAsString() == bluefin_component.customerData
+		);
+	};
+
 	// for dev
-	window.getCustomerData = () => customerData
-	
-	
+	window.getCustomerData = () => customerData;
+
 	// console.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
-	
+
 	// console.debug('getEditingShippingAddress:', checkout_store.getEditingShippingAddress(), dispatch( checkoutStore ).setEditingShippingAddress)
-	
+
 	useEffect( () => {
 		const unsubscribe = onPaymentSetup( async () => {
 			// Here we can do any processing we need, and then emit a response.
@@ -513,9 +491,9 @@ const BluefinCheckout = ( props ) => {
 	// console.debug('componets: ', props.components.ValidationInputError('AAA') )
 
 	console.debug( 'Content props:', props, cardTotals, store );
-	
-	console.debug('customerDataAsString:', customerDataAsString())
-	
+
+	console.debug( 'customerDataAsString:', customerDataAsString() );
+
 	// console.debug('window.bluefinPlugin:', window.bluefinPlugin)
 
 	const iframeConfig = {
@@ -527,7 +505,7 @@ const BluefinCheckout = ( props ) => {
 	console.debug( 'paymentStatus:', props.paymentStatus );
 
 	console.debug( 'emitResponse:', emitResponse );
-	
+
 	/*
 	useEffect(() => {
 		setTimeout(()=>{
@@ -535,36 +513,42 @@ const BluefinCheckout = ( props ) => {
 		}, 5555)
 	}, [])
 	*/
-	
-	if(isEditing || !isScriptLoaded() ) {
+
+	if ( isEditing || ! isScriptLoaded() ) {
 		const iframe_container = document.querySelector(
 			'#bluefin-payment-gateway-iframe-container'
 		);
-		
+
 		iframe_container && ( iframe_container.innerHTML = '' );
-		
+
 		return <div id="bluefin-payment-gateway-iframe-container"></div>;
 	}
 
 	// Calculate current iframe timeout
 	{
-		if (!bluefin_component.iframe_session) {
+		if ( ! bluefin_component.iframe_session ) {
 			bluefin_component.iframe_session = {
-				start: Date.now()
-			}
+				start: Date.now(),
+			};
 		}
 
-		bluefin_component.iframe_session.passed = Date.now() - bluefin_component.iframe_session.start;
+		bluefin_component.iframe_session.passed =
+			Date.now() - bluefin_component.iframe_session.start;
 
-		let passed = parseInt(bluefin_component.iframe_session.passed / 1000)
+		const passed = parseInt(
+			bluefin_component.iframe_session.passed / 1000
+		);
 
-		let timeout = parseInt(window.bluefinPlugin.iframe_timeout) - passed;
+		const timeout =
+			parseInt( window.bluefinPlugin.iframe_timeout ) - passed;
 
 		bluefin_component.current_timeout = timeout;
 
-		if (timeout <= 0) {
-			alert("Bluefin Iframe Payment Session Expired. Please, refresh the page and try again.")
-			return
+		if ( timeout <= 0 ) {
+			alert(
+				'Bluefin Iframe Payment Session Expired. Please, refresh the page and try again.'
+			);
+			return;
 		}
 	}
 
@@ -589,7 +573,10 @@ const BluefinCheckout = ( props ) => {
 			console.debug('props:', props, )
 			*/
 
-			bluefin_component.request.total_price = get_total(total_price, currency_minor_unit);
+			bluefin_component.request.total_price = get_total(
+				total_price,
+				currency_minor_unit
+			);
 			bluefin_component.request.currency = currency_code;
 			// props.shouldSavePayment = true;
 		},
@@ -608,14 +595,13 @@ const BluefinCheckout = ( props ) => {
 		timeout( data ) {
 			console.debug( 'Timeout:', data );
 		},
-	}
+	};
 
-  	// TODO: Replace with useEffect?
+	// TODO: Replace with useEffect?
 	if ( ! bluefin_component.loaded ) {
-		bluefin_component.customerData = JSON.stringify(customerData)
-		
+		bluefin_component.customerData = JSON.stringify( customerData );
+
 		bluefin_component.loaded = true;
-		
 
 		const init_iframe_id = setInterval( async () => {
 			if (
@@ -624,8 +610,8 @@ const BluefinCheckout = ( props ) => {
 				) != null
 			) {
 				clearInterval( init_iframe_id );
-				
-				await createAndInjectBluefinIframe({
+
+				await createAndInjectBluefinIframe( {
 					cartData,
 					customerData,
 					total_price,
@@ -633,18 +619,16 @@ const BluefinCheckout = ( props ) => {
 					currency_code,
 					iframeConfig,
 					callbacks,
-				})
-				
+				} );
 			}
 		}, 555 );
-		
 	} else {
 		const iframe_container = document.querySelector(
 			'#bluefin-payment-gateway-iframe-container'
 		);
 
 		console.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
-		
+
 		// Still problems with same messages doubling up.
 		// TODO: Should be fixed by the 06.2025 release. Check in then
 		// getEventListeners
@@ -652,14 +636,14 @@ const BluefinCheckout = ( props ) => {
 		// NOTE: Transaction ID has already been used
 		iframe_container && ( iframe_container.innerHTML = '' );
 
-		const same_customer_data = sameCustomerData()
-		
-		console.debug([
-			!isEditing && same_customer_data,
-			!isEditing && !same_customer_data,
-		])
-		
-		if(!isEditing && same_customer_data) {
+		const same_customer_data = sameCustomerData();
+
+		console.debug( [
+			! isEditing && same_customer_data,
+			! isEditing && ! same_customer_data,
+		] );
+
+		if ( ! isEditing && same_customer_data ) {
 			const bearerToken = bluefin_component.bearerToken;
 
 			bearerToken &&
@@ -670,9 +654,8 @@ const BluefinCheckout = ( props ) => {
 					null,
 					window.bluefinPlugin.cc_endpoint
 				);
-		} else if(!isEditing && !same_customer_data) {
-		
-			createAndInjectBluefinIframe({
+		} else if ( ! isEditing && ! same_customer_data ) {
+			createAndInjectBluefinIframe( {
 				cartData,
 				customerData,
 				total_price,
@@ -680,8 +663,8 @@ const BluefinCheckout = ( props ) => {
 				currency_code,
 				iframeConfig,
 				callbacks,
-			})
-			
+			} );
+
 			// If shipping same as billing address
 			/*
 			const {
@@ -695,8 +678,6 @@ const BluefinCheckout = ( props ) => {
 			bluefin_component.customerData = JSON.stringify({...customerData, shippingAddress: _billingAddress})
 					setShippingAddressDispatch(_billingAddress)
 			*/
-					
-					
 		}
 		// NOTE: fall through otherwise, which returns the payment label only given that we do (iframe_container.innerHTML = '')
 		/* else if(isEditing) {
@@ -712,14 +693,11 @@ const BluefinCheckout = ( props ) => {
 					window.bluefinPlugin.cc_endpoint
 				);
 		} */
-
-
 	}
 
 	// settings.description
 	return <div id="bluefin-payment-gateway-iframe-container"></div>;
 };
-
 
 /*
 const BluefinIframe = memo( function BluefinIframe (props) {
@@ -803,10 +781,9 @@ const BluefinCheckout = (props) => {
 }
 */
 
-
 // For development
-bluefin_component.closeEditing = function() { 
-/*
+bluefin_component.closeEditing = function () {
+	/*
 	const { setEditingShippingAddress, setEditingBillingAddress } =
 		useDispatch( CHECKOUT_STORE_KEY );
 
@@ -832,16 +809,11 @@ bluefin_component.closeEditing = function() {
 	
 	setBillingAddressEditing(false);
 	*/
-	
-	dispatch( checkoutStore ).setEditingShippingAddress(false);
-	dispatch( checkoutStore ).setEditingBillingAddress(false);
 
-}
-
-
-
-
-;( async function () {
+	dispatch( checkoutStore ).setEditingShippingAddress( false );
+	dispatch( checkoutStore ).setEditingBillingAddress( false );
+};
+( async function () {
 	const BluefinPaymentMethod = {
 		name: PAYMENT_METHOD_NAME,
 		label: <Label />,
