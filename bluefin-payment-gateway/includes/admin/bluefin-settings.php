@@ -101,10 +101,10 @@ $bluefin_settings = [
 	],
 	// Payment Methods of the Iframe
 	'use_card_payment'                   => [
-		'title'       => __( 'Credit/Debit Card', 'bluefin-payment-gateway' ),
-		'type'        => 'checkbox',
-		'default'     => 'yes',
-		'desc_tip'    => false,
+		'title'    => __( 'Credit/Debit Card', 'bluefin-payment-gateway' ),
+		'type'     => 'checkbox',
+		'default'  => 'yes',
+		'desc_tip' => false,
 	],
 	/*
 	'use_ach_payment'           => [
@@ -117,16 +117,16 @@ $bluefin_settings = [
 	],
 	*/
 	'use_google_pay'                     => [
-		'title'       => __( 'Google Pay', 'bluefin-payment-gateway' ),
-		'type'        => 'checkbox',
-		'default'     => 'yes',
-		'desc_tip'    => false,
+		'title'    => __( 'Google Pay', 'bluefin-payment-gateway' ),
+		'type'     => 'checkbox',
+		'default'  => 'yes',
+		'desc_tip' => false,
 	],
 	'use_mastercard_click_to_pay'        => [
-		'title'       => __( 'Mastercard Click to Pay', 'bluefin-payment-gateway' ),
-		'type'        => 'checkbox',
-		'default'     => 'yes',
-		'desc_tip'    => false,
+		'title'    => __( 'Mastercard Click to Pay', 'bluefin-payment-gateway' ),
+		'type'     => 'checkbox',
+		'default'  => 'yes',
+		'desc_tip' => false,
 	],
 	// TODO:  ["Plugins.Payments.Bluefin.Fields.PaymentMethod.Required"] = "At least one payment method must be selected."
 
