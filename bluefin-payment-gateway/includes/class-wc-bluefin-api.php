@@ -28,14 +28,14 @@ class WC_Bluefin_API {
 
 	private static $iframe_config_id = '';
 
-	private static $threeDSecureInitSettings = array();
+	private static $threeDSecureInitSettings = [];
 
 
-	public static function set_3ds_settings($threeDSecureInitSettings) {
+	public static function set_3ds_settings( $threeDSecureInitSettings ) {
 		self::$threeDSecureInitSettings = $threeDSecureInitSettings;
 	}
 
-	public static function set_use_3ds(bool $use_3ds) {
+	public static function set_use_3ds( bool $use_3ds ) {
 		self::$use_3ds = $use_3ds;
 	}
 
@@ -143,15 +143,15 @@ class WC_Bluefin_API {
 		);
 
 		$iframe_init_config = [
-			'label'                    => 'my-instance-1', // TODO: Make it unique based on customer_id + something?
-			'amount'                   => $request_json['total_price'],
-			'customer'                 => $request_json['customer'],
-			'timeout'				   => $request_json['timeout'],
-			'bfTokenReferences'        => $tokens,
-			'initializeTransaction'    => true,
+			'label'                 => 'my-instance-1', // TODO: Make it unique based on customer_id + something?
+			'amount'                => $request_json['total_price'],
+			'customer'              => $request_json['customer'],
+			'timeout'               => $request_json['timeout'],
+			'bfTokenReferences'     => $tokens,
+			'initializeTransaction' => true,
 		];
 
-		if(self::get_use_3ds()) {
+		if ( self::get_use_3ds() ) {
 			$iframe_init_config['threeDSecureInitSettings'] = self::$threeDSecureInitSettings;
 		}
 

@@ -80,7 +80,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		$this->iframe_config_id        = $this->get_option( 'iframe_config_id' );
 		$this->use_auth_only           = 'yes' === $this->get_option( 'use_auth_only', 'no' );
 
-		$this->use_three_d_secure	   = 'yes' === $this->get_option('use_three_d_secure', 'yes');
+		$this->use_three_d_secure = 'yes' === $this->get_option( 'use_three_d_secure', 'yes' );
 
 		// WC_Bluefin_Logger::log('DEBUG: ' . $this->id . ' ' . $this->plugin_id);
 
@@ -152,25 +152,22 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 	public function set_3ds_settings() {
 		$three_d_secure_entries = [
-			'three_d_secure_trans_type'  => 'transactionType',
+			'three_d_secure_trans_type'          => 'transactionType',
 			'three_d_secure_delivery_time_frame' => 'deliveryTimeFrame',
 			'three_d_secure_challenge_indicator' => 'threeDSecureChallengeIndicator',
-			'three_d_secure_reorder_indicator' => 'reorderIndicator',
-			'three_d_secure_shipping_indicator' => 'shippingIndicator',
+			'three_d_secure_reorder_indicator'   => 'reorderIndicator',
+			'three_d_secure_shipping_indicator'  => 'shippingIndicator',
 		];
 
-		$mapped_settings = array();
+		$mapped_settings = [];
 
-		WC_Bluefin_API::set_use_3ds($this->use_three_d_secure);
+		WC_Bluefin_API::set_use_3ds( $this->use_three_d_secure );
 
 		foreach ( $three_d_secure_entries as $option_name => $API_field ) {
-			$mapped_settings[$API_field] = $this->get_option( $option_name );
+			$mapped_settings[ $API_field ] = $this->get_option( $option_name );
 		}
 
-		WC_Bluefin_API::set_3ds_settings($mapped_settings);
-
-
-
+		WC_Bluefin_API::set_3ds_settings( $mapped_settings );
 	}
 
 
@@ -240,7 +237,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 			[
 				'generate_bearer_token_url' => esc_url_raw( rest_url( 'wc_bluefin/v1/generate_bearer_token' ) ),
 				'cc_endpoint'               => $this->use_sandbox ? WC_Bluefin_Defaults::cc_cert : WC_Bluefin_Defaults::cc_prod,
-				'iframe_timeout'				=> $this->get_option( 'iframe_timeout' ),
+				'iframe_timeout'            => $this->get_option( 'iframe_timeout' ),
 				// 'current_customer_id'                => get_current_user_id(),
 				'nonce'                     => wp_create_nonce( 'wp_rest' ),
 			]
