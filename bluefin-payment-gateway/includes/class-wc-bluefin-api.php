@@ -192,7 +192,7 @@ class WC_Bluefin_API {
 				'currency' => $transaction['currency'],
 			],
 			'trace'            => [
-				'source' => 'WooCommerce Store',
+				'source' => 'WooCommerce Plugin',
 			],
 			'bfTokenReference' => $transaction['bftokenreference'],
 		];
@@ -214,7 +214,7 @@ class WC_Bluefin_API {
 				'currency' => $transaction['currency'],
 			],
 			'trace'            => [
-				'source' => 'WooCommerce Store',
+				'source' => 'WooCommerce Plugin',
 			],
 			'bfTokenReference' => $transaction['bftokenreference'],
 		];
