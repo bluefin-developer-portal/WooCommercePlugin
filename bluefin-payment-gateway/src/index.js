@@ -48,8 +48,7 @@ const bluefin_component = ( window.bluefin_component =
 
 window.bluefin_component.request = window.bluefin_component.request || {};
 
-
-const alert = window.alert
+const alert = window.alert;
 
 function isDigit( c ) {
 	return c >= '0' && c <= '9';
