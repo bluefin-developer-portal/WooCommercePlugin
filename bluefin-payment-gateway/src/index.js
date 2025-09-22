@@ -72,9 +72,10 @@ const Label = ( props ) => {
 				if(divRef.current && divRef.current.parentNode) {
 					clearInterval(id)
 					
-					console.log(divRef.current.parentNode.parentNode.parentNode.parentNode)
+					console.debug('Label UseEffect:', divRef.current.parentNode.parentNode.parentNode.parentNode)
 					
 					divRef.current.parentNode.parentNode.parentNode.addEventListener('click', function() {
+						// console.debug("Label Click")
 						bluefin_component.closeEditing()
 					})
 				}
@@ -809,7 +810,7 @@ bluefin_component.closeEditing = function() {
 	setBillingAddressEditing(false);
 	*/
 	
-	
+	dispatch( checkoutStore ).setEditingShippingAddress(false);
 	dispatch( checkoutStore ).setEditingBillingAddress(false);
 
 }
