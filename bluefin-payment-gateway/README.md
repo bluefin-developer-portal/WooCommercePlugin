@@ -1,19 +1,33 @@
-# Bluefin Payment Gateway
+# Bluefin Payment Gateway Plugin for WooCommerce
+
+This is the <!-- official --> feature plugin for accepting payments via the Bluefin Payment Gateway on a WooCommerce store.
+
+These are the transaction types that this WooCommerce plugin supports:
+
+| Sale | Authorization + Manual Capture | Refund | Partial Refund | Void |
+| ---- | ------------------------------ | ------ | -------------- | ---- |
+| ✔    | ✔                              | ✔      | ✔              | ✗    |
+
+
+
+## Dependencies
+
+- WooCommerce
+
+
 
 ## Getting Started
 
-### Prerequisites
+### 
+
+### Installation and Build
 
 -   [NPM](https://www.npmjs.com/)
 -   [Composer](https://getcomposer.org/download/)
 -   [wp-env](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/)
-
-### Installation and Build
 
 ```
 npm install
 npm run build
 wp-env start
 ```
-
-Visit the added page at http://localhost:8888/wp-admin/admin.php?page=wc-admin&path=%2Fexample.
