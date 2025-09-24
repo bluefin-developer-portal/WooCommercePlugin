@@ -23,6 +23,7 @@ $bluefin_settings = [
 		'type'        => 'textarea',
 		'description' => __( 'Payment method description.', 'bluefin-payment-gateway' ),
 		'default'     => __( 'Pay securely with Bluefin Payment Gateway.', 'bluefin-payment-gateway' ),
+		'desc_tip'    => true,
 	],
 	'enable_logging'                     => [
 		'title'       => __( 'Enable Logging', 'bluefin-payment-gateway' ),

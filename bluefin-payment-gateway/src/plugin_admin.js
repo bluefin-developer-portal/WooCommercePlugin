@@ -1,5 +1,16 @@
 const jQuery = window.jQuery;
 
+const doc_support_html = `<blockquote>
+                    <p>
+                        <p> Once the merchant is integrated with Bluefin Payment Gateway, the Bluefin Integrations Team provides them with the recommended Iframe configuration according to their needs for the WooCommerce Store. </p>
+                        
+                        For more details on configuring the Bluefin plugin, make sure to be up-to-date with the 
+                        <a href="https://developers.bluefin.com/payconex/v4/reference/creating-a-configuration" target="_blank" rel="noopener noreferrer">
+                        Bluefin Checkout Component Documentation.
+                        </a>
+                    </p>
+                </blockquote>`;
+
 jQuery( function ( $ ) {
 	// document.addEventListener("DOMContentLoaded", function (event) {
 	$( document ).ready( function () {
@@ -46,6 +57,20 @@ jQuery( function ( $ ) {
 		}
 
 		if ( settings_page_open ) {
+			const wrap_woocommerce =
+				document.querySelector( '.wrap.woocommerce' );
+			const plugin_admin_header =
+				wrap_woocommerce.querySelector( '.wc-admin-header' );
+
+			const support_div = document.createElement( 'div' );
+
+			support_div.innerHTML = doc_support_html;
+
+			plugin_admin_header.parentNode.insertBefore(
+				support_div,
+				plugin_admin_header.nextElementSibling.nextElementSibling
+			);
+
 			const required = [
 				// TODO: { regex: '', ...}
 				{ name: 'account_id', validate: () => true },
