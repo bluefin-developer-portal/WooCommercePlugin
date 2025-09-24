@@ -291,7 +291,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		if ( $order->get_status() == OrderStatus::ON_HOLD ) {
 			echo '<button type="button" class="button" id="bluefin_reverse_auth_button"'
 				. ' data-order-id=' . strval( $order->get_id() ) . '>'
-				. 'Reverse Auth' . '</button>';
+				. 'Void' . '</button>';
 		}
 	}
 
