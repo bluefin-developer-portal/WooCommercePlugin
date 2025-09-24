@@ -10,13 +10,17 @@ These are the Card-Not-Present transaction types that this WooCommerce plugin su
 
 
 
-One of the most common use cases of **Authorization + Manual Capture** is when an order requires shipping (shipping-related information including address, etc). Upon the order having been shipped to the customer, the merchant manually captures the authorization - completing the order.
+> 📘 Authorization + Manual Capture
+>
+> One of the most common use cases of **Authorization + Manual Capture** is when an order requires shipping (shipping-related information including address, etc). Upon the order having been shipped to the customer, the merchant manually captures the authorization - completing the order.
+>
+> In the case of Bluefin authorization transaction, note that the status of the WooCommerce order is `On hold`. Upon capture, it is `Completed`.
+>
+> For the tutorial of authorization and capturing a WooCommerce order via the Bluefin Plugin, see below. 
+>
+> Also check out [Order Statuses in WooCommerce](https://woocommerce.com/document/managing-orders/order-statuses/#order-statuses-in-woocommerce) and [WooCommerce | Authorize and capture](https://woocommerce.com/document/woopayments/settings-guide/authorize-and-capture/).
 
-In the case of Bluefin authorization transaction, note that the status of the WooCommerce order is `On hold`. Upon capture, it is `Completed`.
 
-For the tutorial of authorization and capturing a WooCommerce order via the Bluefin Plugin, see below. 
-
-Also check out [Order Statuses in WooCommerce](https://woocommerce.com/document/managing-orders/order-statuses/#order-statuses-in-woocommerce) and [WooCommerce | Authorize and capture](https://woocommerce.com/document/woopayments/settings-guide/authorize-and-capture/).
 
 
 
@@ -28,10 +32,16 @@ screenshot
 
 
 
-To get these actions from the Bluefin API, use the corresponding transaction id attached to the order and get the transaction metadata.
+To get these transaction actions from the Bluefin API, use the corresponding transaction id attached to the order and get the transaction metadata.
 
 ```json
 ```
+
+
+
+## Checkout Blocks Support
+
+This plugin uses the latest WooCommerce Checkout Blocks UI, built with the React library, to improve the checkout flow and overall user experience. For more, see [WooCommerce block-based checkout](https://woocommerce.com/checkout-blocks/).
 
 
 
