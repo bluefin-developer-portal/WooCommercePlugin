@@ -18,6 +18,33 @@ jQuery( function ( $ ) {
 			search.includes( 'page=wc-settings' ) &&
 			search.includes( 'section=bluefin_gateway' );
 
+		function required_label( input_elem ) {
+			const fieldset = input_elem.parentNode;
+
+			const prev_label = fieldset.querySelector(
+				'.bluefin-required-label'
+			);
+
+			const p = document.createElement( 'p' );
+
+			p.textContent = 'This field is required.';
+			p.style.color = 'red';
+			p.classList.add( 'bluefin-required-label' );
+
+			prev_label && prev_label.remove();
+			fieldset.appendChild( p );
+		}
+
+		function remove_required_label( input_elem ) {
+			const fieldset = input_elem.parentNode;
+
+			const bluefin_required_label = fieldset.querySelector(
+				'.bluefin-required-label'
+			);
+
+			bluefin_required_label && bluefin_required_label.remove();
+		}
+
 		if ( settings_page_open ) {
 			const required = [
 				// TODO: { regex: '', ...}
@@ -84,10 +111,14 @@ jQuery( function ( $ ) {
 				if ( target.value == '' ) {
 					target.style.border = 'solid red 1px';
 
+					required_label( target );
+
 					setTimeout( () => disableSave(), 111 );
 					// event.target.reportValidity();
 				} else {
 					target.style.border = null;
+					remove_required_label( target );
+
 					for ( const field of required ) {
 						if (
 							field.validate() &&
@@ -130,10 +161,21 @@ jQuery( function ( $ ) {
 						setting_iframe_width.value = '';
 						setting_iframe_height.value = '';
 
+						setting_iframe_width.style.border = null;
+						setting_iframe_height.style.border = null;
+
+						remove_required_label( setting_iframe_width );
+						remove_required_label( setting_iframe_height );
+
 						enableSave();
 					} else {
 						setting_iframe_width.disabled = false;
 						setting_iframe_height.disabled = false;
+						setting_iframe_width.style.border = 'solid red 1px';
+						setting_iframe_height.style.border = 'solid red 1px';
+						required_label( setting_iframe_width );
+						required_label( setting_iframe_height );
+
 						disableSave();
 
 						setting_iframe_width.addEventListener(
@@ -187,6 +229,16 @@ jQuery( function ( $ ) {
 					validateOption( 'iframe_timeout', event );
 				}
 			);
+
+			for ( const field of required ) {
+				// console.debug('setting:', settings[ field.name ].style.border )
+				if ( field.validate() && settings[ field.name ].value == '' ) {
+					settings[ field.name ].style.border = 'solid red 1px';
+					required_label( settings[ field.name ] );
+
+					disableSave();
+				}
+			}
 		}
 
 		if ( add_capture ) {
