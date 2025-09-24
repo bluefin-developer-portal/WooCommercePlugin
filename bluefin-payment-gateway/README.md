@@ -20,6 +20,23 @@ Also check out [Order Statuses in WooCommerce](https://woocommerce.com/document/
 
 
 
+Over the course of transaction actions, the order notes are updated according to the Bluefin Plugin for WooCommerce tracking purposes. For example,
+
+screenshot
+
+
+
+
+
+To get these actions from the Bluefin API, use the corresponding transaction id attached to the order and get the transaction metadata.
+
+```json
+```
+
+
+
+
+
 ## Dependencies
 
 - WooCommerce
