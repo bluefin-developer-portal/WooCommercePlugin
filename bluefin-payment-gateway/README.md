@@ -10,7 +10,7 @@ These are the Card-Not-Present transaction types that this WooCommerce plugin su
 
 
 
-The use case of **Authorization + Manual Capture** is when an order requires shipping (shipping-related information including address, etc). Upon the order having been shipped to the customer, the merchant manually captures the authorization - completing the order.
+One of the most common use cases of **Authorization + Manual Capture** is when an order requires shipping (shipping-related information including address, etc). Upon the order having been shipped to the customer, the merchant manually captures the authorization - completing the order.
 
 In the case of Bluefin authorization transaction, note that the status of the WooCommerce order is `On hold`. Opon capture, it is `Completed`.
 
