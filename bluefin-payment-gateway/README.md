@@ -4,9 +4,9 @@ This is the official eCommerce plugin for accepting and processing payments via 
 
 These are the Card-Not-Present transaction types that this WooCommerce plugin supports:
 
-| Sale | Authorization + Manual Capture | Refund | Partial Refund | Void |
-| ---- | ------------------------------ | ------ | -------------- | ---- |
-| ✔    | ✔                              | ✔      | ✔              | ✗    |
+| Sale | Authorization + Manual Capture | Refund | Partial Refund | Void (Authorization Reversal) |
+| ---- | ------------------------------ | ------ | -------------- | ----------------------------- |
+| ✔    | ✔                              | ✔      | ✔              | ✗                             |
 
 
 
