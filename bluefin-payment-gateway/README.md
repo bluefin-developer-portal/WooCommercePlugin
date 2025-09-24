@@ -1,6 +1,6 @@
 # Bluefin Payment Gateway Plugin for WooCommerce
 
-This is the unofficial eCommerce plugin for accepting and processing payments via the Bluefin Payment Gateway for the WooCommerce platform/stores.
+This is the official eCommerce plugin for accepting and processing payments via the Bluefin Payment Gateway for the WooCommerce platform/stores.
 
 These are the Card-Not-Present transaction types that this WooCommerce plugin supports:
 
