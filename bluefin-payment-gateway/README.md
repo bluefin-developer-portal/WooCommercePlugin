@@ -81,7 +81,23 @@ Here are some of the key components that the Bluefin payment plugin offers to th
 
 
 
+## Installing the Plugin
+
+First, download the latest release of our Bluefin Payment Gateway Plugin from [GitHub](https://github.com/bluefin-developer-portal/WooCommercePlugin/releases).
+
+After downloading the zip of the plugin's build (`bluefin-payment-gateway.zip`), go to `Admin -> Plugins -> Add Plugin -> Upload Plugin` and upload the zip. Then, you are set to activate and configure your plugin instance.
+
+Please check out the [Start with WooCommerce in 5 Steps | Extend WooCommerce](https://woocommerce.com/document/start-with-woocommerce-in-5-steps/#extend-woocommerce) Guide for the purpose and installation of third-party plugins.
+
+> 📘 Building is not required
+>
+> By downloading `bluefin-payment-gateway.zip`, you do not need to build the plugin - only install it as mentioned above.
+>
+> If you are a developer testing, you may as well download the source code and build our solution.
 
 
 
+## Comprehensive Reference
+
+For the comprehensive documentation on this WooCommerce plugin, please go to [our readme.io page](https://developers.bluefin.com/payconex/v4/reference/woocommerce-plugin-for-bluefin).
 
