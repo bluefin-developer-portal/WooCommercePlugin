@@ -2,7 +2,7 @@ const jQuery = window.jQuery;
 
 const doc_support_html = `<blockquote>
                     <p>
-                        <p> Once the merchant is integrated with Bluefin Payment Gateway, the Bluefin Integrations Team provides them with the recommended Iframe configuration according to their needs for the WooCommerce Store. </p>
+                        <p> Once the merchant is integrated with Bluefin Payment Gateway, the Bluefin Integrations Team provides them with the optimal Iframe configuration for their WooCommerce store. </p>
                         
                         For more details on configuring the Bluefin plugin, make sure to be up-to-date with the 
                         <a href="https://developers.bluefin.com/payconex/v4/reference/creating-a-configuration" target="_blank" rel="noopener noreferrer">
