@@ -600,11 +600,17 @@ const BluefinCheckout = ( props ) => {
 			// props.shouldSavePayment = true;
 		},
 		checkoutComplete( data ) {
-			console.debug( 'Checkout complete:', data );
+			// NOTE: window.postMessage doubling FIX
+			if ( ! bluefin_component.checkoutComplete ) {
+				bluefin_component.checkoutComplete = true;
 
-			bluefin_component.request.bftokenreference = data.bfTokenReference;
-			// Trigger Place Order Button
-			onSubmit();
+				console.debug( 'Checkout complete:', data );
+
+				bluefin_component.request.bftokenreference =
+					data.bfTokenReference;
+				// Trigger Place Order Button
+				onSubmit();
+			}
 
 			// data.data.meta.savePaymentOption;
 		},
