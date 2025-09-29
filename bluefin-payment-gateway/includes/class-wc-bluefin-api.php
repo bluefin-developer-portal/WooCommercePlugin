@@ -4,8 +4,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Communicating with Bluefin API.
+ * Communicating with Bluefin Payment Gateway API.
  */
+
+function uuidv4() {
+	$data = random_bytes( 16 );
+
+	$data[6] = chr( ord( $data[6] ) & 0x0f | 0x40 );
+	$data[8] = chr( ord( $data[8] ) & 0x3f | 0x80 );
+
+	return vsprintf( '%s%s%s%s%s%s%s%s', str_split( bin2hex( $data ), 4 ) );
+}
 
 class WC_Bluefin_API {
 
@@ -47,7 +56,42 @@ class WC_Bluefin_API {
 		return self::$use_3ds;
 	}
 
-	public static function generate_headers() {
+	public static function generate_HMAC( $http_method, $path, $body ) {
+		$api_key_id = self::$api_key_id;
+		$secret_key = self::$api_key_secret;
+
+		$timestamp = strval( intval( microtime( true ) ) );
+
+		if ( $http_method != 'GET' && $http_method != 'DELETE' ) {
+			$body = json_encode( $body );
+		} else {
+			$body = '';
+		}
+
+		$nonce = uuidv4() . uuidv4();
+
+		$payload_hash = hash( 'sha256', $body );
+
+		$canonical_request = '' .
+		$http_method . ' ' . $path . "\n"
+		. $nonce . "\n"
+		. $timestamp . "\n\n"
+		. $payload_hash;
+
+		// WC_Bluefin_Logger::log( 'canonical_request: ' . $canonical_request );
+
+		$digest = hash_hmac( 'sha256', $canonical_request, $secret_key, false );
+
+		$header_value = 'Hmac '
+		. 'id="' . $api_key_id . '"'
+		. ', nonce="' . $nonce . '"'
+		. ', timestamp="' . $timestamp . '"'
+		. ', response="' . $digest . '"';
+
+		return $header_value;
+	}
+
+	public static function generate_headers( $http_method, $path, $body ) {
 		$headers = [];
 
 		$headers['Content-Type'] = 'application/json';
@@ -55,7 +99,7 @@ class WC_Bluefin_API {
 		if ( self::$use_sandbox ) {
 			$headers['Authorization'] = 'Basic ' . base64_encode( self::$api_key_id . ':' . self::$api_key_secret );
 		} else {
-			// TODO: HMAC
+			$headers['Authorization'] = self::generate_HMAC( $http_method, $path, $body );
 		}
 
 		return $headers;
@@ -87,8 +131,12 @@ class WC_Bluefin_API {
 	}
 
 
-	public static function POST_request( $url, $request, $headers ) {
+	public static function POST_request( $url, $request, $path ) {
 		$method = 'POST';
+
+		$headers = self::generate_headers( $method, $path, $request );
+
+		// WC_Bluefin_Logger::log( 'HEADERS: ' . json_encode( $headers ) );
 
 		$request_string = json_encode( $request );
 
@@ -133,8 +181,9 @@ class WC_Bluefin_API {
 	}
 
 	public static function v4_init_iframe( $request_json ) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id .
+		$path = self::api_postfix . self::$account_id .
 				'/payment-iframe/' . self::$iframe_config_id . '/instance/init';
+		$url  = self::$endpoint . $path;
 		// WC_Bluefin_Logger::log('URL: ' . $url);
 
 		$user_id = get_current_user_id();
@@ -147,7 +196,7 @@ class WC_Bluefin_API {
 		);
 
 		$iframe_init_config = [
-			'label'                 => 'my-instance-1', // TODO: Make it unique based on customer_id + something?
+			'label'                 => 'my-instance-1', // TODO: Make it unique based on customer_id + some value?
 			'amount'                => $request_json['total_price'],
 			'customer'              => $request_json['customer'],
 			'timeout'               => $request_json['timeout'],
@@ -177,14 +226,15 @@ class WC_Bluefin_API {
 			$iframe_init_config['shippingAddress'] = $request_json['shippingaddress'];
 		}
 
-		$res = self::POST_request( $url, $iframe_init_config, self::generate_headers() );
+		$res = self::POST_request( $url, $iframe_init_config, $path );
 
 		return $res;
 	}
 
 	public static function v4_refund( $transaction ) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id .
+		$path = self::api_postfix . self::$account_id .
 				'/payments/' . $transaction['transactionId'] . '/refund';
+		$url  = self::$endpoint . $path;
 
 		$refund_req = [
 			'posProfile'  => 'ECOMMERCE',
@@ -192,27 +242,29 @@ class WC_Bluefin_API {
 			'amounts'     => $transaction['amounts'],
 		];
 
-		$res = self::POST_request( $url, $refund_req, self::generate_headers() );
+		$res = self::POST_request( $url, $refund_req, $path );
 
 		return $res;
 	}
 
 	public static function v4_capture( $transaction ) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id .
+		$path = self::api_postfix . self::$account_id .
 				'/payments/' . $transaction['transactionId'] . '/capture';
+		$url  = self::$endpoint . $path;
 
 		$capture_req = [
 			'posProfile' => 'ECOMMERCE',
 		];
 
-		$res = self::POST_request( $url, $capture_req, self::generate_headers() );
+		$res = self::POST_request( $url, $capture_req, $path );
 
 		return $res;
 	}
 
 	public static function v4_auth( $transaction ) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id .
+		$path = self::api_postfix . self::$account_id .
 				'/payments/auth';
+		$url  = self::$endpoint . $path;
 
 		$auth_req = [
 			'transactionId'    => $transaction['transactionId'],
@@ -227,14 +279,15 @@ class WC_Bluefin_API {
 			'bfTokenReference' => $transaction['bftokenreference'],
 		];
 
-		$res = self::POST_request( $url, $auth_req, self::generate_headers() );
+		$res = self::POST_request( $url, $auth_req, $path );
 
 		return $res;
 	}
 
 	public static function v4_sale( $transaction ) {
-		$url = self::$endpoint . self::api_postfix . self::$account_id .
+		$path = self::api_postfix . self::$account_id .
 				'/payments/sale';
+		$url  = self::$endpoint . $path;
 
 		$sale_req = [
 			'transactionId'    => $transaction['transactionId'],
@@ -249,7 +302,7 @@ class WC_Bluefin_API {
 			'bfTokenReference' => $transaction['bftokenreference'],
 		];
 
-		$res = self::POST_request( $url, $sale_req, self::generate_headers() );
+		$res = self::POST_request( $url, $sale_req, $path );
 
 		return $res;
 	}
