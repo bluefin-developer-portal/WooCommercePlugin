@@ -309,9 +309,6 @@ async function createAndInjectBluefinIframe( context ) {
 		'#bluefin-payment-gateway-iframe-container'
 	);
 
-	// Still problems with same messages doubling up.
-	// TODO: Should be fixed by the 06.2025 release. Check in then
-	// getEventListeners
 	// NOTE: Prevent injecting the same iframe twice or more and start clean.
 	// NOTE: Transaction ID has already been used
 	iframe_container && ( iframe_container.innerHTML = '' );
@@ -654,9 +651,6 @@ const BluefinCheckout = ( props ) => {
 
 		console.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
 
-		// Still problems with same messages doubling up.
-		// TODO: Should be fixed by the 06.2025 release. Check in then
-		// getEventListeners
 		// NOTE: Prevent injecting the same iframe twice or more and start clean.
 		// NOTE: Transaction ID has already been used
 		iframe_container && ( iframe_container.innerHTML = '' );
