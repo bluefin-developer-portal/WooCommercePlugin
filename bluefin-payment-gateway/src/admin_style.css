@@ -1,0 +1,66 @@
+#transaction_meta_dialog {
+  border: 1px solid black;
+  width: 50%;
+  height: 70%;
+  animation: fade-out 0.7s ease-out;
+}
+
+#transaction_meta_dialog:open {
+  animation: fade-in 0.7s ease-out;
+}
+
+#transaction_meta_dialog:open::backdrop {
+  background-color: black;
+  animation: backdrop-fade-in 0.7s ease-out forwards;
+}
+
+.close_json_viewer_dialog {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+}
+
+/* Animation keyframes */
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+    display: none;
+  }
+
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+    display: block;
+  }
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+    transform: scaleY(1);
+    display: block;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleY(0);
+    display: none;
+  }
+}
+
+@keyframes backdrop-fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0.25;
+  }
+}

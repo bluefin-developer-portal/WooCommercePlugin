@@ -180,6 +180,52 @@ class WC_Bluefin_API {
 		return json_decode( $response['body'], true );
 	}
 
+	public static function GET_request( $url, $request, $path ) {
+		$method = 'GET';
+
+		$headers = self::generate_headers( $method, $path, $request );
+
+		// WC_Bluefin_Logger::log( 'HEADERS: ' . json_encode( $headers ) );
+
+		$response = wp_safe_remote_get(
+			$url,
+			[
+				'method'  => $method,
+				'headers' => $headers,
+				'timeout' => 60, // in seconds
+			]
+		);
+
+		// WC_Bluefin_Logger::log(print_r( $response['response']['code'], true ));
+
+		if ( is_wp_error( $response ) ) {
+			$error_message = $response->get_error_message();
+			WC_Bluefin_Logger::error(
+				"Bluefin API error: {$method} {$url}",
+				[
+					'request'  => $request_string,
+					'response' => $response,
+				]
+			);
+			throw new WC_Bluefin_Exception( $error_message );
+
+		}
+
+		if ( $response['response']['code'] >= 400 ) {
+			WC_Bluefin_Logger::error(
+				"Bluefin API error: {$method} {$url}",
+				[
+					'request'  => $request_string,
+					'response' => $response,
+				]
+			);
+
+			throw new WC_Bluefin_Exception( print_r( $response, true ), __( 'There was a problem communicating with Bluefin Services. Please, contact the admin.', 'bluefin-payment-gateway' ) );
+		}
+
+		return json_decode( $response['body'], true );
+	}
+
 	public static function v4_init_iframe( $request_json ) {
 		$path = self::api_postfix . self::$account_id .
 				'/payment-iframe/' . self::$iframe_config_id . '/instance/init';
@@ -257,6 +303,18 @@ class WC_Bluefin_API {
 		];
 
 		$res = self::POST_request( $url, $capture_req, $path );
+
+		return $res;
+	}
+
+	public static function v4_get_transaction_metadata( $transaction ) {
+		$path = self::api_postfix . self::$account_id .
+				'/payments/' . $transaction['transactionId'];
+		$url  = self::$endpoint . $path;
+
+		$get_req = [];
+
+		$res = self::GET_request( $url, $get_req, $path );
 
 		return $res;
 	}

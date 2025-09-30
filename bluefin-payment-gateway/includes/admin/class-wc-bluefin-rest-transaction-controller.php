@@ -19,10 +19,65 @@ class WC_REST_Bluefin_Transaction_Controller extends WC_Bluefin_REST_Base_Contro
 				'permission_callback' => [ $this, 'check_permissions' ],
 			]
 		);
+
+		register_rest_route(
+			$this->namespace,
+			'/get_transaction_metadata',
+			[
+				'methods'             => WP_REST_Server::CREATABLE, // 'POST',
+				'callback'            => [ $this, 'get_transaction_metadata' ],
+				// adjust for auth as needed
+				'permission_callback' => [ $this, 'check_permissions' ],
+			]
+		);
 	}
 
 	public function check_permissions() {
 		return current_user_can( 'administrator' );
+	}
+
+	public function get_transaction_metadata( $request ) {
+		$trans_resp = null;
+
+		$err_message = '';
+
+		try {
+			$json_body = $request->get_json_params();
+
+			$transaction_id = $json_body['transaction_id'];
+
+			$trans_resp = WC_Bluefin_API::v4_get_transaction_metadata(
+				[
+					'transactionId' => $transaction_id,
+				]
+			);
+
+		} catch ( WC_Bluefin_Exception $err ) {
+			$err_message = sprintf( __( 'Payment verification error: %s', 'bluefin-payment-gateway' ), $err->getLocalizedMessage() );
+			wc_add_notice( esc_html( $err_message ), 'error' );
+			// wc_print_notices();
+
+			return new WP_Error(
+				'bluefin_error',
+				sprintf(
+					__( $err_message, 'bluefin-payment-gateway' ),
+				)
+			);
+		} catch ( \Throwable $e ) {
+			$err_message = $e->getMessage()
+				. ' on Line '
+				. strval( $e->getLine() )
+				. ' File: ' . $e->getFile();
+
+			return new WP_Error(
+				'bluefin_error',
+				sprintf(
+					__( $err_message, 'bluefin-payment-gateway' ),
+				)
+			);
+		}
+
+		return rest_ensure_response( $trans_resp );
 	}
 
 	public function capture_transaction( $request ) {

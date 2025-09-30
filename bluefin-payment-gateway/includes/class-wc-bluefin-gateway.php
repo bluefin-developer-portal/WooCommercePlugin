@@ -105,6 +105,8 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 		// Note: display error is in the parent class.
 		add_action( 'admin_notices', [ $this, 'display_errors' ], 9999 );
 
+		add_action( 'woocommerce_order_item_add_action_buttons', [ $this, 'view_transaction_metadata' ] );
+
 		add_action( 'woocommerce_order_item_add_action_buttons', [ $this, 'reverse_auth' ] );
 
 		add_action( 'woocommerce_order_item_add_action_buttons', [ $this, 'capture_payment' ] );
@@ -285,6 +287,13 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 			return true;
 		}
 		return false;
+	}
+
+	// Buttons for woocommerce_order_item_add_action_buttons
+	public function view_transaction_metadata( $order ) {
+		echo '<button type="button" class="button" id="bluefin_view_transaction_metadata"'
+			. ' data-transaction-id=' . strval( $order->get_meta( 'bluefinTransactionId' ) ) . '>'
+			. 'View Transaction Metadata via Bluefin' . '</button>';
 	}
 
 	public function reverse_auth( $order ) {

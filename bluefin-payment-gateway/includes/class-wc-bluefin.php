@@ -90,10 +90,14 @@ class bluefin_payment_gateway {
 				'bluefin-plugin-admin',
 				'bluefinPlugin',
 				[
-					'capture_url' => esc_url_raw( rest_url( 'wc_bluefin/v1/capture_transaction' ) ),
-					'nonce'       => wp_create_nonce( 'wp_rest' ),
+					'capture_url'            => esc_url_raw( rest_url( 'wc_bluefin/v1/capture_transaction' ) ),
+					'json_dom_viewer_script' => plugins_url( 'assets/json_dom_viewer.js', WC_BLUEFIN_MAIN_FILE ),
+					'get_transaction_url'    => esc_url_raw( rest_url( 'wc_bluefin/v1/get_transaction_metadata' ) ),
+					'nonce'                  => wp_create_nonce( 'wp_rest' ),
 				]
 			);
+
+			wp_enqueue_style( 'bluefin-plugin-admin-style', plugins_url( 'assets/admin_style.css', WC_BLUEFIN_MAIN_FILE ), [], null, 'all' );
 	}
 
 	public function register_routes() {

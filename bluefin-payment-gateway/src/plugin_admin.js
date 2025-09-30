@@ -11,6 +11,66 @@ const doc_support_html = `<blockquote>
                     </p>
                 </blockquote>`;
 
+function loadScript( src, callback ) {
+	const script = document.createElement( 'script' );
+	script.src = src;
+	script.async = true;
+	script.onload = async () => callback && ( await callback() );
+	document.head.appendChild( script );
+}
+
+async function get_transaction_metadata( $, transaction_id ) {
+	let resp = null,
+		data = null;
+
+	const { get_transaction_url, nonce } = bluefinPlugin;
+
+	try {
+		// Spinning Animation
+		$( '#woocommerce-order-items' ).block( {
+			message: null,
+			overlayCSS: {
+				background: '#fff',
+				opacity: 0.6,
+			},
+		} );
+
+		resp = await fetch( get_transaction_url, {
+			method: 'POST',
+			// credentials: "include",
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': nonce,
+			},
+			body: JSON.stringify( {
+				transaction_id,
+			} ),
+		} );
+
+		if (
+			resp.headers.get( 'content-type' ).includes( 'application/json' )
+		) {
+			data = await resp.json();
+		}
+
+		console.debug( 'get_transaction_metadata resp:', resp, data );
+
+		if ( ! resp.ok ) {
+			const err = new Error( 'HTTP status code: ' + resp.status );
+			err.message = JSON.stringify( data );
+			err.status = resp.status;
+			throw err;
+		}
+
+		$( '#woocommerce-order-items' ).unblock();
+	} catch ( err ) {
+		$( '#woocommerce-order-items' ).unblock();
+		alert( err );
+		return;
+	}
+	return data;
+}
+
 jQuery( function ( $ ) {
 	// document.addEventListener("DOMContentLoaded", function (event) {
 	$( document ).ready( function () {
@@ -24,6 +84,10 @@ jQuery( function ( $ ) {
 			typeof search === 'string' &&
 			search.includes( '?page=wc-orders&action=edit' ) &&
 			capture_button;
+
+		const edit_order_page_open =
+			typeof search === 'string' &&
+			search.includes( '?page=wc-orders&action=edit' );
 
 		const settings_page_open =
 			search.includes( 'page=wc-settings' ) &&
@@ -267,8 +331,6 @@ jQuery( function ( $ ) {
 		}
 
 		if ( add_capture ) {
-			console.debug( 'capture_button:', capture_button, window.location );
-
 			const refund_button = document.querySelector(
 				'.button.refund-items'
 			);
@@ -342,6 +404,105 @@ jQuery( function ( $ ) {
 					$( '#woocommerce-order-items' ).unblock();
 					alert( err );
 				}
+			} );
+		}
+
+		if ( edit_order_page_open ) {
+			const view_transaction_metadata_button = document.querySelector(
+				'#bluefin_view_transaction_metadata'
+			);
+
+			if ( ! view_transaction_metadata_button ) return;
+
+			loadScript( bluefinPlugin.json_dom_viewer_script, async () => {
+				function isObject( _object ) {
+					return (
+						type( _object ) == Object || type( _object ) == Array
+					);
+				}
+
+				function inject_json_viewer_cache(
+					transaction_object,
+					cache,
+					_path = ''
+				) {
+					if ( isObject( transaction_object ) ) {
+						for ( const key in transaction_object ) {
+							if ( isObject( transaction_object[ key ] ) ) {
+								cache[ _path + '.' + key ] = true;
+							}
+							inject_json_viewer_cache(
+								transaction_object[ key ],
+								cache,
+								_path + '.' + key
+							);
+						}
+					}
+				}
+
+				const dialog = document.createElement( 'dialog' );
+				const close_dialog_button = document.createElement( 'button' );
+
+				close_dialog_button.classList.add( 'close_json_viewer_dialog' );
+				close_dialog_button.classList.add( 'button' ); // woocommerce-theme button class
+				close_dialog_button.textContent = 'close';
+
+				close_dialog_button.addEventListener(
+					'click',
+					function ( event ) {
+						event.preventDefault();
+						dialog.close();
+					}
+				);
+
+				dialog.appendChild( close_dialog_button );
+
+				dialog.id = 'transaction_meta_dialog';
+
+				document
+					.querySelector( '.wrap .woocommerce' )
+					.appendChild( dialog );
+
+				view_transaction_metadata_button.addEventListener(
+					'click',
+					async function ( event ) {
+						event.preventDefault();
+
+						const prev_json_viewer_comp = dialog.querySelector(
+							'#json_dom_viewer_comp'
+						);
+
+						prev_json_viewer_comp && prev_json_viewer_comp.remove();
+
+						const transaction_id =
+							view_transaction_metadata_button.dataset
+								.transactionId;
+						const transaction_object =
+							await get_transaction_metadata( $, transaction_id );
+
+						const json_cache = { '': true };
+						inject_json_viewer_cache(
+							transaction_object,
+							json_cache,
+							''
+						);
+
+						// console.debug( 'json_cache:', json_cache );
+
+						const _view_json_comp = viewJSON(
+							transaction_object,
+							6,
+							'',
+							json_cache
+						);
+
+						_view_json_comp.id = 'json_dom_viewer_comp';
+
+						dialog.appendChild( _view_json_comp );
+
+						dialog.showModal();
+					}
+				);
 			} );
 		}
 	} );
