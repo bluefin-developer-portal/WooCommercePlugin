@@ -200,7 +200,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 	}
 
 
-	// MOVED TO THE ADMIN SCRIPTS
+	// NOTE: MOVED TO THE ADMIN SCRIPTS
 	public function validate_account_id_field( $key, $value ) {
 		if ( empty( $value ) ) {
 			WC_Admin_Settings::add_error( __( 'Bluefin Account Identifier is required.', 'bluefin-payment-gateway' ) );
