@@ -403,6 +403,9 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 						'total'            => $request_data['total_price'],
 						'currency'         => 'USD',
 						'bftokenreference' => $request_data['bftokenreference'],
+						'trace'            => [
+							'customId' => strval( $order_id ),
+						],
 					]
 				);
 
@@ -417,6 +420,9 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 						'total'            => $request_data['total_price'],
 						'currency'         => 'USD',
 						'bftokenreference' => $request_data['bftokenreference'],
+						'trace'            => [
+							'customId' => strval( $order_id ),
+						],
 					]
 				);
 
