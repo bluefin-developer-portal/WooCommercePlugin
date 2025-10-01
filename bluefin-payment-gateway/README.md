@@ -40,7 +40,7 @@ For more information, see [WooCommerce block-based checkout](https://woocommerce
 
 This plugin implements and combines the Bluefin Checkout Component and Bluefin REST API, constituting the complete ready-to-use Bluefin payment method for WooCommerce platform.
 
-The checkout component supports Card Payment, Google Pay, Mastercard Click to Pay, proving an all-in comprehensive eCommerce payment solution.
+The checkout component supports Card Payment, Google Pay, Mastercard Click to Pay, providing an all-in comprehensive eCommerce payment solution.
 
 The plugin requires the merchant integration with the Bluefin Gateway where the integration team sets up your configuration according to your needs. The merchant is free to customize their Iframe configuration and configure their payment method options on their own as they have gained enough experience while certifying their Bluefin integration.
 
