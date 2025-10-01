@@ -286,6 +286,9 @@ class WC_Bluefin_API {
 			'posProfile'  => 'ECOMMERCE',
 			'description' => $transaction['description'],
 			'amounts'     => $transaction['amounts'],
+			'trace'       => [
+				'source' => 'WooCommerce Plugin',
+			],
 		];
 
 		$res = self::POST_request( $url, $refund_req, $path );
