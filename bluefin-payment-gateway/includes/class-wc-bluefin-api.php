@@ -336,6 +336,11 @@ class WC_Bluefin_API {
 				'customId' => $transaction['trace']['customId'],
 			],
 			'bfTokenReference' => $transaction['bftokenreference'],
+			'credentialOnFile' => [
+				'transactionInitiator'      => 'CUSTOMER',
+				'storedCredentialIndicator' => 'INITIAL',
+				'scheduleIndicator'         => 'UNSCHEDULED',
+			],
 		];
 
 		$res = self::POST_request( $url, $auth_req, $path );
@@ -360,6 +365,11 @@ class WC_Bluefin_API {
 				'customId' => $transaction['trace']['customId'],
 			],
 			'bfTokenReference' => $transaction['bftokenreference'],
+			'credentialOnFile' => [
+				'transactionInitiator'      => 'CUSTOMER',
+				'storedCredentialIndicator' => 'INITIAL',
+				'scheduleIndicator'         => 'UNSCHEDULED',
+			],
 		];
 
 		$res = self::POST_request( $url, $sale_req, $path );
