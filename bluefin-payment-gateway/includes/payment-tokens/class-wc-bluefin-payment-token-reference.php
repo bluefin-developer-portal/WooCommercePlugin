@@ -55,7 +55,7 @@ class WC_Payment_Token_Bluefin {
 	public static function get_tokens( $customer_id ) {
 		global $wpdb;
 
-		WC_Bluefin_Logger::log( "SELECT * FROM {$wpdb->prefix}woocommerce_bluefin_payment_gateway_reference_tokens WHERE customer_id = {$customer_id}" );
+		// WC_Bluefin_Logger::log( "SELECT * FROM {$wpdb->prefix}woocommerce_bluefin_payment_gateway_reference_tokens WHERE customer_id = {$customer_id}" );
 
 		$results = $wpdb->get_results( "SELECT token FROM {$wpdb->prefix}woocommerce_bluefin_payment_gateway_reference_tokens WHERE customer_id = {$customer_id}", OBJECT );
 
