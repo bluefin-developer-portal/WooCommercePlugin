@@ -46,7 +46,9 @@ const label = decodeEntities( settings?.title || '' ) || defaultLabel;
 const bluefin_component = ( window.bluefin_component =
 	window.bluefin_component || {} );
 
-window.bluefin_component.request = window.bluefin_component.request || {};
+bluefin_component.request = window.bluefin_component.request || {};
+
+bluefin_component.mode = { prod: true };
 
 const alert = window.alert;
 
@@ -66,6 +68,12 @@ class Input {
 	}
 }
 
+class Logger {
+	static debug( ...args ) {
+		window.bluefin_component.mode.dev && console.debug( ...args );
+	}
+}
+
 const Label = ( props ) => {
 	const { PaymentMethodLabel } = props.components;
 
@@ -77,19 +85,19 @@ const Label = ( props ) => {
 				if ( divRef.current && divRef.current.parentNode ) {
 					clearInterval( id );
 
-					console.debug(
+					Logger.debug(
 						'Label UseEffect:',
 						divRef.current.parentNode.parentNode.parentNode
 							.parentNode
 					);
 
-					divRef.current.parentNode.parentNode.parentNode.addEventListener(
-						'click',
-						function () {
-							// console.debug("Label Click")
-							bluefin_component.closeEditing();
-						}
-					);
+					const label_method_option =
+						divRef.current.parentNode.parentNode.parentNode;
+
+					label_method_option.addEventListener( 'click', function () {
+						// Logger.debug("Label Click")
+						bluefin_component.closeEditing();
+					} );
 				}
 			}, 555 );
 		}
@@ -334,7 +342,7 @@ async function createAndInjectBluefinIframe( context ) {
 		bearer_body.currency = currency_code;
 		bearer_body.timeout = bluefin_component.current_timeout;
 
-		console.debug( 'fetching bearer_body:', bearer_body );
+		Logger.debug( 'fetching bearer_body:', bearer_body );
 
 		// Request Bearer Token
 		resp = await fetch( generate_bearer_token_url, {
@@ -353,7 +361,7 @@ async function createAndInjectBluefinIframe( context ) {
 			data = await resp.json();
 		}
 
-		console.debug( `res: ${ generate_bearer_token_url }`, resp );
+		Logger.debug( `res: ${ generate_bearer_token_url }`, resp );
 
 		if ( ! resp.ok ) {
 			const err = new Error( 'HTTP status code: ' + resp.status );
@@ -363,6 +371,7 @@ async function createAndInjectBluefinIframe( context ) {
 		}
 	} catch ( err ) {
 		alert( err );
+		return;
 	}
 
 	const bearerToken = data.iframe_instance_resp.bearerToken;
@@ -422,7 +431,7 @@ const BluefinCheckout = ( props ) => {
 		[]
 	);
 
-	// console.debug('isCustomerDataUpdating:', store.isCustomerDataUpdating())
+	// Logger.debug('isCustomerDataUpdating:', store.isCustomerDataUpdating())
 
 	// NOTE: total_price including total_fees, total_tax, etc.
 	const { currency_code, total_price, currency_minor_unit } = cardTotals;
@@ -438,7 +447,7 @@ const BluefinCheckout = ( props ) => {
 	const isScriptLoaded = () => window.bluefinPlugin != null;
 
 	const sameCustomerData = () => {
-		// console.debug(customerDataAsString(), bluefin_component.customerData);
+		// Logger.debug(customerDataAsString(), bluefin_component.customerData);
 		return (
 			bluefin_component.customerData != null &&
 			customerDataAsString() == bluefin_component.customerData
@@ -448,9 +457,9 @@ const BluefinCheckout = ( props ) => {
 	// for dev
 	window.getCustomerData = () => customerData;
 
-	// console.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
+	// Logger.debug('getEditingBillingAddress:', checkout_store.getEditingBillingAddress(), dispatch( checkoutStore ).setEditingBillingAddress)
 
-	// console.debug('getEditingShippingAddress:', checkout_store.getEditingShippingAddress(), dispatch( checkoutStore ).setEditingShippingAddress)
+	// Logger.debug('getEditingShippingAddress:', checkout_store.getEditingShippingAddress(), dispatch( checkoutStore ).setEditingShippingAddress)
 
 	useEffect( () => {
 		const unsubscribe = onPaymentSetup( async () => {
@@ -487,7 +496,7 @@ const BluefinCheckout = ( props ) => {
 	/*
 	useEffect( () => {
 		const unsubscribe = onCheckoutValidation( () => {
-			// console.debug('onCheckoutValidation')
+			// Logger.debug('onCheckoutValidation')
 			return {
 				type: emitResponse.responseTypes.ERROR,
 				message: 'Please, complete the Bluefin checkout step.',
@@ -497,13 +506,13 @@ const BluefinCheckout = ( props ) => {
 	}, [ onCheckoutValidation ] );
 	*/
 
-	// console.debug('componets: ', props.components.ValidationInputError('AAA') )
+	// Logger.debug('componets: ', props.components.ValidationInputError('AAA') )
 
-	console.debug( 'Content props:', props, cardTotals, store );
+	Logger.debug( 'Content props:', props, cardTotals, store );
 
-	console.debug( 'customerDataAsString:', customerDataAsString() );
+	Logger.debug( 'customerDataAsString:', customerDataAsString() );
 
-	// console.debug('window.bluefinPlugin:', window.bluefinPlugin)
+	// Logger.debug('window.bluefinPlugin:', window.bluefinPlugin)
 
 	const iframeConfig = {
 		parentDivId: 'bluefin-payment-gateway-iframe-container',
@@ -511,9 +520,9 @@ const BluefinCheckout = ( props ) => {
 		// height: '300px',
 	};
 
-	console.debug( 'paymentStatus:', props.paymentStatus );
+	Logger.debug( 'paymentStatus:', props.paymentStatus );
 
-	console.debug( 'emitResponse:', emitResponse );
+	Logger.debug( 'emitResponse:', emitResponse );
 
 	/*
 	useEffect(() => {
@@ -571,22 +580,22 @@ const BluefinCheckout = ( props ) => {
 	const callbacks = {
 		iframeLoaded( ...args ) {
 			/*
-			console.debug('customerData', customerData, store)
+			Logger.debug('customerData', customerData, store)
 
-			console.debug('cartData: ', cartData)
+			Logger.debug('cartData: ', cartData)
 
 
 			// select(CART_STORE_KEY).getNeedsShipping()
-			console.debug('needsShipping: ', cartData.needsShipping)
+			Logger.debug('needsShipping: ', cartData.needsShipping)
 
 			// NOTE: Gets order grand total including taxes, shipping cost, fees, and coupon discounts. Used in gateways.
-			console.debug('cardTotals: ', cardTotals, currency_code, total_price)
+			Logger.debug('cardTotals: ', cardTotals, currency_code, total_price)
 
-			console.debug('Iframe loaded', args)
+			Logger.debug('Iframe loaded', args)
 
-			console.debug('getOrderNotes:', store.getOrderNotes())
+			Logger.debug('getOrderNotes:', store.getOrderNotes())
 
-			console.debug('props:', props, )
+			Logger.debug('props:', props, )
 			*/
 
 			bluefin_component.request.total_price = get_total(
@@ -601,7 +610,7 @@ const BluefinCheckout = ( props ) => {
 			if ( ! bluefin_component.checkoutComplete ) {
 				bluefin_component.checkoutComplete = true;
 
-				console.debug( 'Checkout complete:', data );
+				Logger.debug( 'Checkout complete:', data );
 
 				bluefin_component.request.bftokenreference =
 					data.bfTokenReference;
@@ -615,7 +624,7 @@ const BluefinCheckout = ( props ) => {
 			console.error( 'Error:', data );
 		},
 		timeout( data ) {
-			console.debug( 'Timeout:', data );
+			Logger.debug( 'Timeout:', data );
 		},
 	};
 
@@ -649,7 +658,7 @@ const BluefinCheckout = ( props ) => {
 			'#bluefin-payment-gateway-iframe-container'
 		);
 
-		console.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
+		Logger.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
 
 		// NOTE: Prevent injecting the same iframe twice or more and start clean.
 		// NOTE: Transaction ID has already been used
@@ -657,7 +666,7 @@ const BluefinCheckout = ( props ) => {
 
 		const same_customer_data = sameCustomerData();
 
-		console.debug( [
+		Logger.debug( [
 			! isEditing && same_customer_data,
 			! isEditing && ! same_customer_data,
 		] );
@@ -741,14 +750,14 @@ const BluefinIframe = memo( function BluefinIframe (props) {
 	
 
 	useEffect(() => {
-		console.debug('props:', props)
-		console.debug('BluefinIframe useEffect',
+		Logger.debug('props:', props)
+		Logger.debug('BluefinIframe useEffect',
 			window.bluefinPlugin,
 			JSON.stringify(customerData),
 		)
 	}, [])
 	
-	console.debug('BluefinIframe', props, JSON.stringify(customerData))
+	Logger.debug('BluefinIframe', props, JSON.stringify(customerData))
 	
 	// dispatch( checkoutStore ).setEditingBillingAddress(true);
 	
@@ -759,7 +768,7 @@ const BluefinIframe = memo( function BluefinIframe (props) {
 const BluefinCheckout = (props) => {
 	const checkout_store = select( checkoutStore )
 	
-	console.debug('BluefinCheckout')
+	Logger.debug('BluefinCheckout')
 	
 	
 	let _editing = checkout_store.getEditingBillingAddress()
@@ -852,7 +861,7 @@ bluefin_component.closeEditing = function () {
 		},
 	};
 
-	// console.debug(wc.wcBlocksRegistry, settings?.supports );
+	// Logger.debug(wc.wcBlocksRegistry, settings?.supports );
 
 	registerPaymentMethod( BluefinPaymentMethod );
 } )();
