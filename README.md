@@ -87,7 +87,7 @@ First, download the latest release of our Bluefin Payment Gateway Plugin from [G
 
 After downloading the zip of the plugin's build (`bluefin-payment-gateway.zip`), go to `Admin -> Plugins -> Add Plugin -> Upload Plugin` and upload the zip. Then, you are set to activate and configure your plugin instance.
 
-Please check out the [Start with WooCommerce in 5 Steps | Extend WooCommerce](https://woocommerce.com/document/start-with-woocommerce-in-5-steps/#extend-woocommerce) Guide for the purpose and installation of third-party plugins.
+<!-- Please check out the [Start with WooCommerce in 5 Steps | Extend WooCommerce](https://woocommerce.com/document/start-with-woocommerce-in-5-steps/#extend-woocommerce) Guide for the purpose and installation of third-party plugins. -->
 
 > 📘 Building is not required
 >
