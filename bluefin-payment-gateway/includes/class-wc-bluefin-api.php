@@ -174,7 +174,17 @@ class WC_Bluefin_API {
 				]
 			);
 
-			throw new WC_Bluefin_Exception( print_r( $response, true ), __( 'There was a problem communicating with Bluefin Services. Please, contact the admin.', 'bluefin-payment-gateway' ) );
+			$error_message_res = $response;
+
+			$body = wp_remote_retrieve_body( $response );
+
+			if( !empty($body) ) {
+				// TODO: Improve message format for clarity?
+				$error_message_res = json_decode( $response['body'], true );
+			}
+
+
+			throw new WC_Bluefin_Exception( print_r( $error_message_res, true ), __( 'There was a problem communicating with Bluefin Services. Please, contact the admin.', 'bluefin-payment-gateway' ) );
 		}
 
 		return json_decode( $response['body'], true );
@@ -234,12 +244,20 @@ class WC_Bluefin_API {
 
 		$user_id = get_current_user_id();
 
-		$tokens = array_map(
-			function ( $item ) {
-				return $item->token;
-			},
-			WC_Payment_Token_Bluefin::get_tokens( $user_id )
-		);
+		WC_Bluefin_Logger::log('init_iframe user_id: ' . $user_id);
+
+		$tokens = [];
+
+		// See https://developer.wordpress.org/reference/functions/get_current_user_id/
+		// 0 Means that no current user in logged in.
+		if($user_id != 0)  {
+			$tokens = array_map(
+				function ( $item ) {
+					return $item->token;
+				},
+				WC_Payment_Token_Bluefin::get_tokens( $user_id )
+			);
+		}
 
 		$iframe_init_config = [
 			'label'                 => 'my-instance-1', // TODO: Make it unique based on customer_id + some value?
@@ -249,6 +267,10 @@ class WC_Bluefin_API {
 			'bfTokenReferences'     => $tokens,
 			'initializeTransaction' => true,
 		];
+
+		if($user_id == 0) {
+			$iframe_init_config['savePaymentOption'] = 'omit';
+		}
 
 		$allowed_payment_methods = [];
 

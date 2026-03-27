@@ -32,6 +32,9 @@ import {
 	// useCallback
 } from '@wordpress/element';
 
+// For more components, see https://woocommerce.github.io/woocommerce/?path=/docs/woocommerce-blocks_external-components-button--docs
+import { Title } from '@woocommerce/blocks-components';
+
 /**
  * Internal dependencies
  */
@@ -48,7 +51,7 @@ const bluefin_component = ( window.bluefin_component =
 
 bluefin_component.request = window.bluefin_component.request || {};
 
-bluefin_component.mode = { prod: true };
+bluefin_component.mode = { prod: true, dev: false, };
 
 const alert = window.alert;
 
@@ -95,7 +98,7 @@ const Label = ( props ) => {
 						divRef.current.parentNode.parentNode.parentNode;
 
 					label_method_option.addEventListener( 'click', function () {
-						// Logger.debug("Label Click")
+						Logger.debug("Label Click", "closeEditing()");
 						bluefin_component.closeEditing();
 					} );
 				}
@@ -317,6 +320,13 @@ async function createAndInjectBluefinIframe( context ) {
 		'#bluefin-payment-gateway-iframe-container'
 	);
 
+	if(iframe_container == null) {
+		return;
+	}
+
+
+	Logger.debug('createAndInjectBluefinIframe', iframe_container.children.length);
+
 	// NOTE: Prevent injecting the same iframe twice or more and start clean.
 	// NOTE: Transaction ID has already been used
 	iframe_container && ( iframe_container.innerHTML = '' );
@@ -370,7 +380,13 @@ async function createAndInjectBluefinIframe( context ) {
 			throw err;
 		}
 	} catch ( err ) {
-		alert( err );
+		// TODO FIXME: IMPROVE THIS FOR THE USER - USER READABLE AS THE FORM VALIDATION DEPENDS ON THE IFRAME ERROR: STATE MISSING, ETC.
+		// alert(err);
+
+		alert("Error occured while initializing the checkout component.");
+
+		window.setExpressPaymentError && window.setExpressPaymentError(err.toString());
+
 		return;
 	}
 
@@ -381,6 +397,9 @@ async function createAndInjectBluefinIframe( context ) {
 	bluefin_component.bearerToken = bearerToken;
 
 	bluefin_component.request.transactionid = transactionId;
+
+	// NOTE: DUE TO WEIRD BEHAVIOUR, MAKE SURE THERE IS NO DOUBLE IFRAME INJECTION HERE EITHER
+	iframe_container && ( iframe_container.innerHTML = '' );
 
 	window.IframeV2.init(
 		iframeConfig,
@@ -400,7 +419,32 @@ window._domloaded = true
 }
 */
 
+
+/*
+// LAST RESORT SOLUTION FOR DOUBLE IFRAME IN SOME EDGE CASES
+const watchIframeId = setInterval( async ()=>{
+	const iframe_container = document.querySelector(
+		'#bluefin-payment-gateway-iframe-container'
+	);
+
+	if(iframe_container != null) {
+		// Logger.debug('watchIframeId:', iframe_container.children);
+		if(iframe_container.children.length > 1) {
+			// throw iframe_container.children.length;
+			while(iframe_container.children.length != 1) {
+				iframe_container.lastChild.remove();
+			}
+		}
+	}
+
+
+}, 222);
+*/
+
 const BluefinCheckout = ( props ) => {
+
+	Logger.debug('::BluefinCheckout START::');
+
 	const bluefinPlugin = window.bluefinPlugin;
 
 	const customerData = useSelect( ( select ) =>
@@ -436,7 +480,10 @@ const BluefinCheckout = ( props ) => {
 	// NOTE: total_price including total_fees, total_tax, etc.
 	const { currency_code, total_price, currency_minor_unit } = cardTotals;
 
-	const { eventRegistration, emitResponse, onSubmit } = props;
+	const { eventRegistration, emitResponse, onSubmit, setExpressPaymentError } = props;
+
+	// NOTE: USED INSTEAD OF ALERT(ERR) FOR WHEN WE CATCH AN ERROR FROM THE IFRAME INIT CALL ABOVE
+	window.setExpressPaymentError = setExpressPaymentError;
 
 	const { onPaymentSetup, onCheckoutValidation } = eventRegistration;
 
@@ -511,6 +558,7 @@ const BluefinCheckout = ( props ) => {
 	Logger.debug( 'Content props:', props, cardTotals, store );
 
 	Logger.debug( 'customerDataAsString:', customerDataAsString() );
+	Logger.debug('isScriptLoaded: ',  isScriptLoaded());
 
 	// Logger.debug('window.bluefinPlugin:', window.bluefinPlugin)
 
@@ -524,6 +572,8 @@ const BluefinCheckout = ( props ) => {
 
 	Logger.debug( 'emitResponse:', emitResponse );
 
+	Logger.debug('isEditing: return bluefin-payment-gateway-iframe-container', isEditing);
+
 	/*
 	useEffect(() => {
 		setTimeout(()=>{
@@ -532,13 +582,26 @@ const BluefinCheckout = ( props ) => {
 	}, [])
 	*/
 
+	// NOTE: isEditing is used both when the customer is currently editing the info or there is no data whatsoever the first time around
 	if ( isEditing || ! isScriptLoaded() ) {
 		const iframe_container = document.querySelector(
 			'#bluefin-payment-gateway-iframe-container'
 		);
 
+		Logger.debug('isEditing iframe_continer', iframe_container);
+
 		iframe_container && ( iframe_container.innerHTML = '' );
 
+		let div_note = document.createElement('div');
+
+		div_note.textContent = 'Customer information currently being edited. When ready, please click back here to complete your checkout.';
+
+		iframe_container && iframe_container.appendChild(div_note);
+
+
+		// headingLevel="5"
+		// <Title headingLevel="5"> Customer information currently being edited. When ready, please click back here to complete your checkout. </Title>
+		// <div> Customer information currently being edited. When ready, please click back here to complete your checkout.</div>
 		return <div id="bluefin-payment-gateway-iframe-container"></div>;
 	}
 
@@ -628,6 +691,8 @@ const BluefinCheckout = ( props ) => {
 		},
 	};
 
+	Logger.debug("Loading Bluefin Checkout Comp...");
+
 	// TODO: Replace with useEffect?
 	if ( ! bluefin_component.loaded ) {
 		bluefin_component.customerData = JSON.stringify( customerData );
@@ -635,6 +700,8 @@ const BluefinCheckout = ( props ) => {
 		bluefin_component.loaded = true;
 
 		const init_iframe_id = setInterval( async () => {
+			Logger.debug('iframe Interval', 'retrying...');
+
 			if (
 				document.querySelector(
 					'#bluefin-payment-gateway-iframe-container'
@@ -658,7 +725,7 @@ const BluefinCheckout = ( props ) => {
 			'#bluefin-payment-gateway-iframe-container'
 		);
 
-		Logger.debug( 'else:', JSON.stringify( bluefin_component ) ); // prevent mutation for logging with JSON.stringify
+		Logger.debug( 'else:', JSON.stringify( bluefin_component ), iframe_container.children.length ); // prevent mutation for logging with JSON.stringify
 
 		// NOTE: Prevent injecting the same iframe twice or more and start clean.
 		// NOTE: Transaction ID has already been used
@@ -674,6 +741,7 @@ const BluefinCheckout = ( props ) => {
 		if ( ! isEditing && same_customer_data ) {
 			const bearerToken = bluefin_component.bearerToken;
 
+		    // iframe_container && ( iframe_container.innerHTML = '' );
 			bearerToken &&
 				window.IframeV2.init(
 					iframeConfig,
@@ -724,6 +792,8 @@ const BluefinCheckout = ( props ) => {
 	}
 
 	// settings.description
+	// <Title headingLevel="5"> Customer information currently being edited. When ready, please click back here to complete your checkout. </Title>
+	// <div> Customer information currently being edited. When ready, please click back here to complete your checkout.</div>
 	return <div id="bluefin-payment-gateway-iframe-container"></div>;
 };
 

@@ -54,7 +54,7 @@ class WC_REST_Bluefin_Transaction_Controller extends WC_Bluefin_REST_Base_Contro
 
 		} catch ( WC_Bluefin_Exception $err ) {
 			$err_message = sprintf( __( 'Payment verification error: %s', 'bluefin-payment-gateway' ), $err->getLocalizedMessage() );
-			wc_add_notice( esc_html( $err_message ), 'error' );
+			// wc_add_notice( esc_html( $err_message ), 'error' ); // CANNOT BE USED HERE AS THIS IS A REST CONTROLLER AND IT IS OUTSIDE OF THE BROWSER
 			// wc_print_notices();
 
 			return new WP_Error(
@@ -105,7 +105,7 @@ class WC_REST_Bluefin_Transaction_Controller extends WC_Bluefin_REST_Base_Contro
 
 		} catch ( WC_Bluefin_Exception $err ) {
 			$err_message = sprintf( __( 'Payment verification error: %s', 'bluefin-payment-gateway' ), $err->getLocalizedMessage() );
-			wc_add_notice( esc_html( $err_message ), 'error' );
+			// wc_add_notice( esc_html( $err_message ), 'error' ); // CANNOT BE USED HERE AS THIS IS A REST CONTROLLER AND IT IS OUTSIDE OF THE BROWSER
 			// wc_print_notices();
 
 			return new WP_Error(

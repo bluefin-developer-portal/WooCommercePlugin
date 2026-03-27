@@ -496,7 +496,7 @@ class WC_Gateway_Bluefin extends WC_Payment_Gateway {
 
 		} catch ( WC_Bluefin_Exception $err ) {
 			$message = sprintf( __( 'Payment Error: %s', 'bluefin-payment-gateway' ), $err->getLocalizedMessage() );
-			wc_add_notice( esc_html( $message ), 'error' );
+			wc_add_notice( esc_html( $message ), 'error' ); // OK HERE
 
 			return [
 				'result'   => 'failure',

@@ -20,7 +20,9 @@ class WC_REST_Bluefin_Iframe_Controller extends WC_Bluefin_REST_Base_Controller 
 	}
 
 	public function check_permissions() {
-		return is_user_logged_in();
+		// TODO: Turn this into an option - configurable from settings?
+		return true;
+		// return is_user_logged_in();
 	}
 
 	public function generate_bearer_token( $request ) {
@@ -45,7 +47,7 @@ class WC_REST_Bluefin_Iframe_Controller extends WC_Bluefin_REST_Base_Controller 
 
 		} catch ( WC_Bluefin_Exception $err ) {
 			$err_message = sprintf( __( 'Iframe Payment Instance error: %s', 'bluefin-payment-gateway' ), $err->getLocalizedMessage() );
-			wc_add_notice( esc_html( $err_message ), 'error' );
+			// wc_add_notice( esc_html( $err_message ), 'error' ); // CANNOT BE USED HERE AS THIS IS A REST CONTROLLER AND IT IS OUTSIDE OF THE BROWSER
 			// wc_print_notices();
 
 			return new WP_Error(

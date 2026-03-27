@@ -15,6 +15,6 @@ class WC_Bluefin_Exception extends Exception {
 
 
 	public function getLocalizedMessage() {
-		return $this->localized_message;
+		return $this->localized_message . $this->getMessage();
 	}
 }

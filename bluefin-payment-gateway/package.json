@@ -1,6 +1,6 @@
 {
 	"name": "bluefin-payment-gateway",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"author": "Bluefin",
 	"license": "GPL-3.0",
 	"main": "build/index.js",
