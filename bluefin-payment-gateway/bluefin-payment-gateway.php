@@ -3,7 +3,7 @@
  * Plugin Name: Bluefin Payment Gateway
  * Plugin URI: https://wordpress.org/plugins/bluefin-payment-gateway/
  * Description: The Bluefin PayConex™ Gateway is a comprehensive, PCI compliant, full-service payment solution.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Bluefin
  * Author URI: https://www.bluefin.com/
  * Text Domain: bluefin-payment-gateway
